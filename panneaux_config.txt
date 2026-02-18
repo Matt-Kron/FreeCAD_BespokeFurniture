@@ -1,0 +1,21 @@
+nom_aggr;nom;longueur;largeur;epaisseur;raf_longueur;raf_largeur;couleur
+MDF 2800x2070x19;MDF;2800.0;2070.0;19.0;10.0;10.0;#d29967
+MDF 2440x1220x19;MDF;2440.0;1220.0;19.0;10.0;10.0;#d29967
+Mela 2800x2070x8;Mela;2800.0;2070.0;8.0;10.0;10.0;#cccccc
+Mela 2800x2070x19;Mela;2800.0;2070.0;19.0;10.0;10.0;#cccccc
+Mela 2800x2070x16;Mela;2800.0;2070.0;16.0;10.0;10.0;#cccccc
+Tab 2800x600x19;Tab;2800.0;600.0;19.0;10.0;0.0;#cccccc
+Tab 2800x500x19;Tab;2800.0;500.0;19.0;10.0;0.0;#cccccc
+Tab 2800x400x19;Tab;2800.0;400.0;19.0;10.0;0.0;#cccccc
+Valchromat 2440x1830x19;Valchromat;2440.0;1830.0;19.0;10.0;10.0;#7c8e96
+Latte chene 2500x1220x19;Latte chene;2500.0;1220.0;19.0;10.0;10.0;#b88f54
+Latte chene 3050x1530x19;Latte chene;3050.0;1530.0;19.0;10.0;10.0;#b88f54
+Mela noir 2800x2070x19;Mela noir;2800.0;2070.0;19.0;10.0;10.0;#2b2b2b
+Mela hetre 2800x2070x19;Mela hetre;2800.0;2070.0;19.0;15.0;15.0;#d2ae82
+HPL 3070x1240x8;HPL;3070.0;1240.0;8.0;2.0;2.0;#2b2b2b
+Mela hetre 2800x2070x8;Mela hetre;2800.0;2070.0;8.0;10.0;10.0;#d2ae82
+CTP chassis 2500x100x22;CTP chassis;2500.0;100.0;22.0;0.0;0.0;#c58362
+Chene massif 3000x400x22;Chene massif;3000.0;400.0;22.0;0.0;0.0;#b88f54
+MDF 2440x1220x19;MDF;2440.0;1220.0;19.0;10.0;10.0;#c6846d
+Mela vert niagara 2800x2070x19;Mela vert niagara;2800.0;2070.0;19.0;10.0;10.0;#4d797f
+Verre 1200x1000x6;Verre;1200.0;1000.0;6.0;0.0;0.0;#00bfff

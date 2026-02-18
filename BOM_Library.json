@@ -1,0 +1,104 @@
+[
+    {
+        "name": "Dimensions",
+        "data": {
+            "dest": "B6",
+            "filter_m": "",
+            "filter_p": "",
+            "mode": "DATA",
+            "selected_cols": [
+                "Objet parent",
+                "Libelle",
+                "Nest_grain",
+                "Thickness",
+                "3eme",
+                "Quantit\u00e9",
+                "Mat\u00e9riau"
+            ]
+        }
+    },
+    {
+        "name": "Operations",
+        "data": {
+            "dest": "R6",
+            "filter_m": "",
+            "filter_p": "",
+            "selected_cols": [
+                "D\u00e9lignage",
+                "D\u00e9gauchissage",
+                "Rabotage",
+                "D\u00e9coupe",
+                "D\u00e9coupe forme",
+                "Clamex",
+                "Autre fixation",
+                "Rainure fond",
+                "Rainure cr\u00e9maill\u00e8re",
+                "Autres rainures",
+                "Collage chant grand",
+                "Collage chant petit",
+                "Pon\u00e7age chant grand",
+                "Pon\u00e7age chant petit",
+                "Pon\u00e7age faces",
+                "Rubio",
+                "Laque",
+                "Plaquage",
+                "Fixation coulisse",
+                "Fixation charni\u00e8re",
+                "Fixation Tip-on",
+                "Fixation Fa\u00e7ade tiroir",
+                "Fixation poign\u00e9e",
+                "CAO",
+                "Montage \u00e0 blanc"
+            ]
+        }
+    },
+    {
+        "name": "UID",
+        "data": {
+            "dest": "B85",
+            "filter_m": "",
+            "filter_p": "",
+            "selected_cols": [
+                "UID"
+            ],
+            "type": "instruction"
+        }
+    },
+    {
+        "name": "Barillet_Dim",
+        "data": {
+            "dest": "R4",
+            "filter_m": [
+                "Mela noir 2800x2070x19",
+                "Mela hetre 2800x2070x19"
+            ],
+            "filter_p": [],
+            "selected_cols": [
+                "Objet parent",
+                "Libelle",
+                "Nest_grain",
+                "Thickness",
+                "3eme",
+                "Quantit\u00e9",
+                "Mat\u00e9riau",
+                "Nest rotation allowed"
+            ],
+            "type": "instruction"
+        }
+    },
+    {
+        "name": "Barillet_UID",
+        "data": {
+            "dest": "Z4",
+            "filter_m": [
+                "Mela hetre 2800x2070x19",
+                "Mela noir 2800x2070x19"
+            ],
+            "filter_p": [],
+            "selected_cols": [
+                "UID"
+            ],
+            "type": "instruction"
+        }
+    }
+]

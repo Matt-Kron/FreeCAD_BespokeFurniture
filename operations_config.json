@@ -1,0 +1,39 @@
+{
+    "Massif": {
+        "Op_Delignage": "D\u00e9lignage",
+        "Op_Degauchissage": "D\u00e9gauchissage",
+        "Op_Rabotage": "Rabotage"
+    },
+    "Panneau": {
+        "Op_Decoupe_Format": "D\u00e9coupe",
+        "Op_Decoupe_Forme": "D\u00e9coupe forme",
+        "Op_Clamex": "Clamex",
+        "Op_Autre_Fixation": "Autre fixation",
+        "Op_Rainure_Fond": "Rainure fond",
+        "Op_Rainure_Cremaillere": "Rainure cr\u00e9maill\u00e8re",
+        "Op_Autres_Rainures": "Autres rainures"
+    },
+    "Chant": {
+        "Op_Collage_Chant_Grand": "Collage chant grand",
+        "Op_Collage_Chant_Petit": "Collage chant petit",
+        "Op_Poncage_Chant_Grand": "Pon\u00e7age chant grand",
+        "Op_Poncage_Chant_Petit": "Pon\u00e7age chant petit"
+    },
+    "Finition": {
+        "Op_Poncage_Faces": "Pon\u00e7age faces",
+        "Op_Rubio": "Rubio",
+        "Op_Laque": "Laque",
+        "Op_Plaquage": "Plaquage"
+    },
+    "Quincaillerie": {
+        "Op_Fixation_Coulisse": "Fixation coulisse",
+        "Op_Fixation_Charniere": "Fixation charni\u00e8re",
+        "Op_Fixation_Tip_on": "Fixation Tip-on",
+        "Op_Fixation_Facade_Tiroir": "Fixation Fa\u00e7ade tiroir",
+        "Op_Fixation_Poignee": "Fixation poign\u00e9e"
+    },
+    "Autre": {
+        "Op_CAO": "CAO",
+        "Op_Montage_Blanc": "Montage \u00e0 blanc"
+    }
+}
