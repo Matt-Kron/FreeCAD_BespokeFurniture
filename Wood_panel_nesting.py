@@ -510,7 +510,7 @@ class Nest:
 
 def Closest_Object(oM, objs):
     # =============================================================================
-    # return the object from the list which as its length or width the closest to the reference object
+    # return the object from the list which has its length or width the closest to the reference object
     # =============================================================================
     omin = None
     orientation = [False, False, False, False]
@@ -760,6 +760,7 @@ with open(log_filepath, 'w') as f:
         f.write(f"{timestamp()} : Starting nesting\n")
 
 def Main():
+    global WOOD_PANELS
     clear_reportView()
     print("Starting Macro Nesting")
 
