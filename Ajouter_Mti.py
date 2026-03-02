@@ -1,16 +1,10 @@
 import os
+from FreeCAD_BespokeFurniture.lib_menuiserie import *
 
-nom_fichier = "config_macro_caisson.cfg"
-repertoire_macros = FreeCAD.getUserMacroDir()
-chemin_complet_fichier = os.path.join(repertoire_macros, nom_fichier)
+cfg_file = ADD_OBJECT_PARAM_FILE
+macros_path = BF_MACROS_PATH
+file_full_path = os.path.join(macros_path, cfg_file)
 monDoc = FreeCAD.ActiveDocument
-
-liste_objets = {"Mt i p 01":"Mt_i_p",
-                "Mt i b 01":"Mt_i_b",
-                "Mt i 01":"Mt_i",
-                "Box030":"Mt_i_bxr",
-                "Mt i rainure 01":"Mt_i_rainure"
-                }
 
 OBJ_NAME = 0
 OBJ_TYPE = 1
@@ -20,20 +14,21 @@ PROP_TYPE = 4
 PROP_VALUE_EXP = 5
 PROP_CONTENU = 6
 
-def lire_configuration_caisson(nom_fichier="config_macro_caisson.cfg"):
+def lire_configuration_caisson():
     """
     Lit le fichier de configuration de la macro et retourne un dictionnaire de paramètres.
     """
 
     # 1. Construire le chemin complet du fichier
-    repertoire_macros = FreeCAD.getUserMacroDir()
-    chemin_complet_fichier = os.path.join(repertoire_macros, nom_fichier)
+    # macros_path = FreeCAD.getUserMacroDir()
+    # file_full_path = os.path.join(macros_path, cfg_file)
+    global file_full_path
 
     config_data = []
 
     try:
         # 2. Ouvrir le fichier en mode lecture ('r')
-        with open(chemin_complet_fichier, 'r') as f:
+        with open(file_full_path, 'r') as f:
 
             # 3. Parcourir chaque ligne du fichier
             for ligne in f:
@@ -54,11 +49,11 @@ def lire_configuration_caisson(nom_fichier="config_macro_caisson.cfg"):
                     config_data.append(element)
 
 
-        print(f"✅ Configuration chargée avec succès depuis : {chemin_complet_fichier}")
+        print(f"✅ Configuration chargée avec succès depuis : {file_full_path}")
         return config_data
 
     except FileNotFoundError:
-        print(f"❌ Le fichier de configuration est introuvable à : {chemin_complet_fichier}")
+        print(f"❌ Le fichier de configuration est introuvable à : {file_full_path}")
         print("   Retourne les paramètres par défaut ou un dictionnaire vide.")
         return {}
     except Exception as e:
@@ -161,4 +156,17 @@ def AjouterMontantIntermediaire():
                 corps.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
     monDoc.getObjectsByLabel("Caisson")[0].addObject(piece)
 
-AjouterMontantIntermediaire()
+# AjouterMontantIntermediaire()
+from FreeCAD_BespokeFurniture.add_object_lib import addObjectPartBodyBox
+
+dftStruct = (
+                "Mt i p",
+                "Mt i b",
+                "Mt i",
+                "Mt i r1",
+                "Mt i rainure",
+            )
+
+addObjectPartBodyBox(dftStruct, monDoc,"Caisson")
+
+

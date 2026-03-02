@@ -1,5 +1,9 @@
 import FreeCAD as App
 import FreeCADGui as Gui
+import os
+
+ADD_OBJECT_PARAM_FILE = "config_macro_caisson.cfg"
+BF_MACROS_PATH = os.path.dirname(__file__)
 
 # Group , Name, Type, Prefix
 EDGEBAND_PROPERTIES = {

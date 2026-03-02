@@ -7,7 +7,7 @@ Created on Sun Mar 30 18:58:04 2025
 
 import os, sys
 
-sys.path.append("/usr/lib/freecad/lib/")
+#sys.path.append("/usr/lib/freecad/lib/")
 import FreeCADGui, FreeCAD, Draft
 from PySide import QtCore, QtGui
 # from PySide.QtWidgets import QLineEdit
