@@ -189,6 +189,7 @@ def apply_assignments(t_name, g_name, d_name, schema):
 
         if schema == "classique":
             box.obj_gauche, box.obj_droit = g_obj, d_obj
+            box.obj_taille_gauche = find_additive_box(g_obj)
         else:
             box.obj_pos_gauche, box.obj_pos_droit = g_obj, d_obj
             print(f"g_obj {g_obj.Label}, d_obj: {d_obj.Label}")

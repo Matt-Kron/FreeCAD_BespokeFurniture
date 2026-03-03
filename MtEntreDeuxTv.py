@@ -191,6 +191,11 @@ def apply_assignments(m_name, r1_name, r2_name, p_type):
 
         if p_type == "vertical":
             target.obj_dessous, target.obj_dessus = obj_r1, obj_r2
+            # Recherche des AdditiveBox pour la taille
+            child = _find_first_child_by_type(obj_r1, "PartDesign::AdditiveBox")
+            print(f"objet partfeature: {child.Label}")
+            if child: # "AdditiveBox" in child.TypeId:
+                setattr(target, "obj_taille_dessous", child)
         else:
             target.obj_pos_dessous, target.obj_pos_dessus = obj_r1, obj_r2
             # Recherche des AdditiveBox pour la taille

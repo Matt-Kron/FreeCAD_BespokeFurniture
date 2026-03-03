@@ -14,12 +14,6 @@ PROP_TYPE = 4
 PROP_VALUE_EXP = 5
 PROP_CONTENU = 6
 
-liste_objets = {"Mt i p 01":"Mt_i_p",
-                "Mt i b 01":"Mt_i_b",
-                "Mt i 01":"Mt_i",
-                "Box001":"Mt_i_bxr",
-                "Mt i rainure 01":"Mt_i_rainure"
-                }
 dftStruct = (
                 "Mt i p",
                 "Mt i b",
@@ -112,7 +106,22 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
     body = myDoc.addObject('PartDesign::Body', objName(objStruct[1]) ) # "Mt_i_b")
     body.Label = objStruct[1]  # "Mt i b"
     part.addObject(body)
+
     # nom = "Mt_i"
+    if len(objStruct) > 3:
+        if objStruct[3] in ("Porte param", "Tiroir param"):
+            label = objStruct[3]
+            print(f"type {label}")
+            name = objName(label)
+            shape = myDoc.addObject('App::VarSet',name)
+            shape.Label = label
+            body.addObject(shape)
+            if label != shape.Label:
+                for ele in elements_Obj:
+                    i = elements_Obj.index(ele)
+                    elements_Obj[i][PROP_CONTENU] = elements_Obj[i][PROP_CONTENU].replace(f"<<{label}>>",f"<<{shape.Label}>>")
+            updateValueExpression(name, shape, elements_Obj, myDoc)
+
     label = objStruct[2]
     shape = myDoc.addObject('PartDesign::AdditiveBox',objBaseName)
     shape.Label = label
@@ -123,91 +132,40 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
             elements_Obj[i][PROP_CONTENU] = elements_Obj[i][PROP_CONTENU].replace(f"<<{label}>>",f"<<{shape.Label}>>")
 
     updateValueExpression(objBaseName, shape, elements_Obj, myDoc)
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == objBaseName:
-    #         if ele[PROP_VALUE_EXP] == "value":
-    #             shape.addProperty(ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP])
-    #             if ele[PROP_TYPE] == "App::PropertyLinkGlobal":
-    #                 setattr(shape, ele[PROP_NAME], myDoc.getObjectsByLabel(ele[PROP_CONTENU])[0])
-    #             elif ele[PROP_TYPE] == "App::PropertyEnumeration":
-    #                 setattr(forme, ele[PROP_NAME], ast.literal_eval(ele[PROP_CONTENU]))
-    #             elif ele[PROP_TYPE] == "App::PropertyBool":
-    #                 setattr(shape, ele[PROP_NAME], 'True' == ele[PROP_CONTENU])
-    #                 # print(f"shape: {ele[OBJ_NAME]}, propriété: {ele[PROP_NAME]}, valeur: {ele[PROP_CONTENU]}, valeur bool(): {bool(ele[PROP_CONTENU])}")
-    #             else:
-    #                 setattr(shape, ele[PROP_NAME], ele[PROP_CONTENU])
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == objBaseName:
-    #         if ele[PROP_VALUE_EXP] == "expression":
-    #             shape.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
 
-    name = objName(objStruct[3]) # "Mt_i_bxr"
-    shape = myDoc.addObject('PartDesign::SubtractiveBox',name)
-    shape.Label = objStruct[3]
-    body.addObject(shape)
-    shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
-    # shape.MapMode = 'ObjectXY'
-    updateValueExpression(name, shape, elements_Obj, myDoc)
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "value":
-    #             shape.addProperty(ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP])
-    #             if ele[PROP_TYPE] == "App::PropertyLinkGlobal":
-    #                 setattr(shape, ele[PROP_NAME], myDoc.getObjectsByLabel(ele[PROP_CONTENU])[0])
-    #             # else:
-    #             #     setattr(shape, ele[PROP_NAME], ele[PROP_CONTENU])
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "expression":
-    #             shape.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
-
-    name = objName(objStruct[4])# "Mt_i_rainure"
-    if "Tablette" in name:
-        subobj = myDoc.getObject(shape.Name)
-        shape = myDoc.addObject('PartDesign::LinearPattern',name)
-        shape.Label = objStruct[4]
-        shape.Originals = myDoc.getObject(subobj.Name)
-        shape.Mode = 'length'
-        shape.Occurrences = 2
-        shape.Direction = (myDoc.getObject(body.Origin.OriginFeatures[2].Name),[''])
-        body.addObject(shape)
-    else:
+    if objBaseName in ("Mt_i", "Tablette_caisson"):
+        name = objName(objStruct[3]) # "Mt_i_bxr"
         shape = myDoc.addObject('PartDesign::SubtractiveBox',name)
-        shape.Label = objStruct[4]
+        shape.Label = objStruct[3]
         body.addObject(shape)
         shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
+        updateValueExpression(name, shape, elements_Obj, myDoc)
 
-    updateValueExpression(name, shape, elements_Obj, myDoc)
+        name = objName(objStruct[4])# "Mt_i_rainure"
+        if "Tablette" in name:
+            subobj = myDoc.getObject(shape.Name)
+            shape = myDoc.addObject('PartDesign::LinearPattern',name)
+            shape.Label = objStruct[4]
+            shape.Originals = myDoc.getObject(subobj.Name)
+            shape.Mode = 'length'
+            shape.Occurrences = 2
+            shape.Direction = (myDoc.getObject(body.Origin.OriginFeatures[2].Name),[''])
+            body.addObject(shape)
+        else:
+            shape = myDoc.addObject('PartDesign::SubtractiveBox',name)
+            shape.Label = objStruct[4]
+            body.addObject(shape)
+            shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
 
-    # shape.MapMode = 'ObjectXY'
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "value":
-    #             shape.addProperty(ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP])
-    #             if ele[PROP_TYPE] == "App::PropertyLinkGlobal":
-    #                 setattr(shape, ele[PROP_NAME], myDoc.getObjectsByLabel(ele[PROP_CONTENU])[0])
-    #             # else:
-    #             #     setattr(shape, ele[PROP_NAME], ele[PROP_CONTENU])
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "expression":
-    #             shape.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
+        updateValueExpression(name, shape, elements_Obj, myDoc)
 
     name = objName(objStruct[0]) # "Mt_i_p"
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "value":
-    #             setattr(part, ele[PROP_NAME], ele[PROP_CONTENU])
     for ele in elements_Obj:
         if ele[OBJ_NAME] == name:
             if ele[PROP_VALUE_EXP] == "expression":
                 part.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
 
     name = objName(objStruct[1]) # "Mt_i_b"
-    # for ele in elements_Obj:
-    #     if ele[OBJ_NAME] == name:
-    #         if ele[PROP_VALUE_EXP] == "value":
-    #             setattr(body, ele[PROP_NAME], ele[PROP_CONTENU])
     for ele in elements_Obj:
         if ele[OBJ_NAME] == name:
             if ele[PROP_VALUE_EXP] == "expression":
