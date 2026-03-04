@@ -29,8 +29,8 @@ def find_box_with_properties(part_obj):
 
     def search(obj):
         plist = obj.PropertiesList
-        if "obj_dessous" in plist: return obj, "vertical"
-        if "obj_pos_dessous" in plist: return obj, "horizontal"
+        if "obj_dessous" in plist: return obj, "vertical_2prop"
+        if "obj_pos_dessous" in plist: return obj, "vertical_4prop"
         # Si c'est un conteneur (Part ou Body), on cherche à l'intérieur
         if hasattr(obj, "Group"):
             for child in obj.Group:
@@ -93,8 +93,8 @@ class AssignmentDialog(QtWidgets.QDialog):
         grid.addWidget(self.list_widgets, 1, 0, 4, 1)
 
         labels = ["Montant Central :",
-                  "Inférieur / Gauche :" if self.prop_type == "vertical" else "Position Inf :",
-                  "Supérieur / Droite :" if self.prop_type == "vertical" else "Position Sup :"]
+                  "Inférieur / Gauche :" if self.prop_type == "vertical_2prop" else "Position Inf :",
+                  "Supérieur / Droite :" if self.prop_type == "vertical_2prop" else "Position Sup :"]
 
         self.edits = {}
         for i, key in enumerate(["montant", "role1", "role2"]):
@@ -189,7 +189,7 @@ def apply_assignments(m_name, r1_name, r2_name, p_type):
         obj_r1 = doc.getObject(r1_name)
         obj_r2 = doc.getObject(r2_name)
 
-        if p_type == "vertical":
+        if p_type == "vertical_2prop":
             target.obj_dessous, target.obj_dessus = obj_r1, obj_r2
             # Recherche des AdditiveBox pour la taille
             child = _find_first_child_by_type(obj_r1, "PartDesign::AdditiveBox")
@@ -251,7 +251,7 @@ def run_assignment_macro(force_ui=None):
     # Boîte de dialogue
     all_data = {p.Name: p.Label for p in resolved_parts}
     initial = {"montant": m_name, "role1": r1_name, "role2": r2_name}
-    dlg = AssignmentDialog(initial, all_data, m_type if m_type else "vertical", pref_show)
+    dlg = AssignmentDialog(initial, all_data, m_type if m_type else "vertical_2prop", pref_show)
     if dlg.exec_() == QtWidgets.QDialog.Accepted:
         params.SetBool("AlwaysShowDialog", dlg.check_pref.isChecked())
         res = dlg.assigned

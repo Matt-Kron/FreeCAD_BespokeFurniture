@@ -102,7 +102,12 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
             elements_Obj.append(ele)
 
     part = myDoc.addObject('App::Part', objName(objStruct[0])) # "Mt_i_p")
-    part.Label = objStruct[0] # "Mt i p"
+    label = objStruct[0]
+    part.Label = label # "Mt i p"
+    if label != part.Label:
+        for ele in elements_Obj:
+            i = elements_Obj.index(ele)
+            elements_Obj[i][PROP_CONTENU] = elements_Obj[i][PROP_CONTENU].replace(f"<<{label}>>",f"<<{part.Label}>>")
     body = myDoc.addObject('PartDesign::Body', objName(objStruct[1]) ) # "Mt_i_b")
     body.Label = objStruct[1]  # "Mt i b"
     part.addObject(body)
@@ -133,7 +138,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
 
     updateValueExpression(objBaseName, shape, elements_Obj, myDoc)
 
-    if objBaseName in ("Mt_i", "Tablette_caisson"):
+    if objBaseName in ("Mt_i", "Mt_i_pente", "Mt_i_pente_G", "Tablette_caisson"):
         name = objName(objStruct[3]) # "Mt_i_bxr"
         shape = myDoc.addObject('PartDesign::SubtractiveBox',name)
         shape.Label = objStruct[3]
