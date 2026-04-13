@@ -63,6 +63,42 @@ def get_column_letter(index):
         index = index // 26 - 1
     return result
 
+import zipfile
+import xml.etree.ElementTree as ET
+
+def get_ods_sheet_names(file_path):
+    """Lit les noms des feuilles en excluant les références externes."""
+    namespaces = {
+        'table': 'urn:oasis:names:tc:opendocument:xmlns:table:1.0'
+    }
+    sheet_names = []
+    try:
+        with zipfile.ZipFile(file_path, 'r') as zp:
+            with zp.open('content.xml') as content_file:
+                tree = ET.parse(content_file)
+                root = tree.getroot()
+
+                for table in root.findall('.//table:table', namespaces):
+                    # --- FILTRES D'EXCLUSION ---
+
+                    # 1. Vérification de la balise table-source (Liaison directe)
+                    has_source = table.find('table:table-source', namespaces) is not None
+
+                    # 2. Vérification du style (ta_extref)
+                    style_name = table.get(f'{{{namespaces["table"]}}}style-name', "")
+                    is_ext_style = "ta_extref" in style_name
+
+                    # On n'ajoute la feuille que si elle n'est ni l'un ni l'autre
+                    if not has_source and not is_ext_style:
+                        name = table.get(f'{{{namespaces["table"]}}}name')
+                        if name:
+                            sheet_names.append(name)
+
+                return sheet_names
+    except Exception as e:
+        App.Console.PrintError(f"Erreur lecture ODS : {str(e)}\n")
+        return []
+
 class BOMToSpreadsheet(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
@@ -89,13 +125,13 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         if SYSTEM == "Windows":
             self.btn_open_calc = QtWidgets.QPushButton("🚀 Lancer Calc (Listen)")
             self.btn_open_calc.clicked.connect(self.start_libreoffice_listen)
+            btns.addWidget(self.btn_open_calc)
 
         # self.btn_listen = QtWidgets.QPushButton("🚀 Ecoute Calc (Port 2002)")
         # self.btn_listen.clicked.connect(self.start_libreoffice_listen)
         btns.addWidget(self.btn_add_file)
         # btns.addWidget(self.btn_listen)
         btns.addWidget(self.btn_manage_lib) # Ajout au layout
-        btns.addWidget(self.btn_open_calc)
         btns.addStretch()
         layout.addLayout(btns)
 
@@ -741,17 +777,54 @@ if __name__ == "__main__":
             self.sync_to_varset()
             self.tree.viewport().update() # Force Qt à redessiner le widget
 
+    # def add_sheet(self, file_item):
+    #     n, ok = QtWidgets.QInputDialog.getText(self, "Feuille", "Nom :")
+    #     if ok and n:
+    #         # On crée un dictionnaire pour la feuille
+    #         data = {"type": "sheet", "name": n}
+    #         si = QtGui.QStandardItem(n)
+    #         si.setData(data, QtCore.Qt.UserRole) # Important !
+    #
+    #         file_item.appendRow([si, QtGui.QStandardItem("SHEET")])
+    #         self.sync_to_varset()
+    #         self.tree.viewport().update() # Force Qt à redessiner le widget
+
     def add_sheet(self, file_item):
-        n, ok = QtWidgets.QInputDialog.getText(self, "Feuille", "Nom :")
+        # 1. Récupérer le chemin du fichier stocké dans l'item parent
+        file_data = file_item.data(QtCore.Qt.UserRole)
+        file_path = file_data.get('path') if isinstance(file_data, dict) else ""
+
+        if not os.path.exists(file_path):
+            QtWidgets.QMessageBox.warning(self, "Erreur", "Fichier introuvable sur le disque.")
+            return
+
+        # 2. Extraire les noms des feuilles du fichier ODS
+        sheet_names = get_ods_sheet_names(file_path)
+
+        if not sheet_names:
+            QtWidgets.QMessageBox.warning(self, "Erreur", "Impossible de lire les feuilles du fichier.")
+            return
+
+        # 3. Demander à l'utilisateur de choisir dans la liste
+        n, ok = QtWidgets.QInputDialog.getItem(
+            self,
+            "Choisir une feuille",
+            f"Feuilles détectées dans {os.path.basename(file_path)} :",
+            sheet_names,
+            0,
+            False
+        )
+
         if ok and n:
             # On crée un dictionnaire pour la feuille
             data = {"type": "sheet", "name": n}
             si = QtGui.QStandardItem(n)
-            si.setData(data, QtCore.Qt.UserRole) # Important !
+            si.setData(data, QtCore.Qt.UserRole)
 
             file_item.appendRow([si, QtGui.QStandardItem("SHEET")])
             self.sync_to_varset()
-            self.tree.viewport().update() # Force Qt à redessiner le widget
+            self.tree.expand(file_item.index()) # Déplier pour voir la nouvelle feuille
+            self.tree.viewport().update()
 
     def add_instruction(self, sheet_item, data=None):
         if not data:

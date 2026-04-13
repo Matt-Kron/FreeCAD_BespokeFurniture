@@ -383,7 +383,7 @@ class FabricationDialog(QtGui.QDialog):
     def __init__(self):
         super(FabricationDialog, self).__init__()
         self.setWindowTitle("Gestion des Opérations de Fabrication (Grille & Filtres)")
-        self.setGeometry(500, 500, 2500, 1000)
+        self.setGeometry(500, 500, 1900, 950)
         self.config = loadOperationsConfig()
         
         if not self.config:
