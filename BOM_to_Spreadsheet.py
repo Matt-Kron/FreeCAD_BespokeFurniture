@@ -1,7 +1,20 @@
 import FreeCAD as App
 import FreeCADGui as Gui
-from PySide2 import QtGui, QtCore, QtWidgets
-import json, os, re, subprocess
+from PySide import QtGui, QtCore, QtWidgets
+import json, os, sys, re, subprocess
+
+import platform
+
+SYSTEM = platform.system()
+
+# --- CONFIGURATION DES CHEMINS SELON L'OS ---
+if SYSTEM == "Windows":
+    PYTHON_LO = r"C:\Program Files\LibreOffice\program\python.exe"
+    # Chemin partagé pour le signal (plus besoin du dossier snap sur Windows)
+    TRIGGER_PATH = os.path.join(os.environ["TEMP"], "bridge_trigger.json")
+else:
+    PYTHON_LO = "soffice" # Ou le chemin vers le python de LO sur Ubuntu
+    TRIGGER_PATH = "/home/matthou/snap/freecad/common/bridge_trigger.json"
 
 # --- CONFIGURATION ---
 HEADERS = {
@@ -73,12 +86,16 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         # --- NOUVEAU BOUTON ---
         self.btn_manage_lib = QtWidgets.QPushButton("📚 Gérer Biblio")
         self.btn_manage_lib.clicked.connect(self.manage_library)
+        if SYSTEM == "Windows":
+            self.btn_open_calc = QtWidgets.QPushButton("🚀 Lancer Calc (Listen)")
+            self.btn_open_calc.clicked.connect(self.start_libreoffice_listen)
 
         # self.btn_listen = QtWidgets.QPushButton("🚀 Ecoute Calc (Port 2002)")
         # self.btn_listen.clicked.connect(self.start_libreoffice_listen)
         btns.addWidget(self.btn_add_file)
         # btns.addWidget(self.btn_listen)
         btns.addWidget(self.btn_manage_lib) # Ajout au layout
+        btns.addWidget(self.btn_open_calc)
         btns.addStretch()
         layout.addLayout(btns)
 
@@ -421,31 +438,17 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
 
     # --- ACTIONS ---
     def run_instruction(self, item):
-        # 1. On remonte TOUJOURS à la colonne 0 pour avoir les données
+        # 1. Récupération des données (Colonne 0)
         idx0 = item.index().sibling(item.row(), 0)
         node = self.model.itemFromIndex(idx0)
-
-        # 2. Récupération sécurisée du dictionnaire d'instruction (Colonne 0)
         data = node.data(QtCore.Qt.UserRole)
-        if not data or not isinstance(data, dict):
-            App.Console.PrintError("❌ Erreur : Données d'instruction introuvables sur cette ligne.\n")
-            return
-
-        # 3. Récupération de la hiérarchie
+        
         sheet_item = node.parent()
-        file_item = sheet_item.parent() if sheet_item else None
-
-        if not sheet_item or not file_item:
-            App.Console.PrintError("❌ Erreur : Structure de l'arbre corrompue.\n")
-            return
-
-        sheet_name = sheet_item.text()
-
-        # Le chemin du fichier est dans le UserRole du parent de la feuille
+        file_item = sheet_item.parent()
         file_data = file_item.data(QtCore.Qt.UserRole)
         file_path = file_data.get('path') if isinstance(file_data, dict) else file_data
 
-        # 4. Extraction des données du BOM FreeCAD
+        # 2. Extraction des données du BOM FreeCAD
         bom = App.ActiveDocument.getObject("BOM")
         if not bom:
             App.Console.PrintError("❌ Erreur : Objet 'BOM' introuvable dans le document FreeCAD.\n")
@@ -463,7 +466,7 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
                 if header: mapping[header] = col_let
 
             d_col, d_row = self.addr_to_pos(data['dest'])
-            rows = []
+            rows_to_export = []
 
             # 5. Boucle de filtrage et lecture
             for r in range(2, last_row + 1):
@@ -486,169 +489,109 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
                             row_vals.append(val if val is not None else "")
                         else:
                             row_vals.append("") # Colonne demandée absente du BOM
-                    rows.append(row_vals)
+                    rows_to_export.append(row_vals)
 
-            # 6. Préparation du signal pour le Watcher
-            payload = {
-                "file_path": file_path,
-                "sheet_name": sheet_name,
-                "start_col": d_col,
-                "start_row": d_row,
-                "rows": rows
-            }
+    
+            # 3. CRÉATION DU SCRIPT INVISIBLE (Spécifique pour Windows 11)
+            if SYSTEM == "Windows":
+                script_transfert = os.path.join(os.environ["TEMP"], "lo_transfert.py")
+                # Correction de l'URL pour Windows (indispensable pour la comparaison)
+                file_url = "file:///" + os.path.abspath(file_path).replace("\\", "/")
+                
+                content = f"""
+import uno
+import json
 
-            trigger_path = "/home/matthou/snap/freecad/common/bridge_trigger.json"
+def export():
+    local_context = uno.getComponentContext()
+    resolver = local_context.ServiceManager.createInstanceWithContext(
+        "com.sun.star.bridge.UnoUrlResolver", local_context)
+    try:
+        context = resolver.resolve("uno:socket,host=localhost,port=2002;urp;StarOffice.ComponentContext")
+    except:
+        return # LO n'est pas en écoute
+        
+    desktop = context.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", context)
+    
+    # --- STRATÉGIE DE CONNEXION AU DOCUMENT ACTIF ---
+    doc = None
+    components = desktop.getComponents().createEnumeration()
+    while components.hasMoreElements():
+        c = components.nextElement()
+        # On vérifie si le fichier est déjà ouvert dans LO
+        if hasattr(c, "URL") and (c.URL == "{file_url}" or c.URL == "{file_url.replace(" ", "%20")}"):
+            doc = c
+            break
+            
+    # Si le document n'est pas ouvert, on l'ouvre
+    if doc is None:
+        from com.sun.star.beans import PropertyValue
+        p1 = PropertyValue()
+        p1.Name = "Hidden"
+        p1.Value = False
+        
+        # CETTE PROPRIÉTÉ DIT À LIBREOFFICE D'IGNORER L'IMPRIMANTE DU DOCUMENT
+        p2 = PropertyValue()
+        p2.Name = "UpdateDocMode"
+        p2.Value = 0 # 0 = Ne pas mettre à jour (styles, liens, imprimantes)
+        
+        props = (p1, p2)
+        #props = (PropertyValue("Hidden", 0, False, 0),)
+        doc = desktop.loadComponentFromURL("{file_url}", "_blank", 0, props)
+        
+    if not doc: return
 
-            with open(trigger_path, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=4)
-                f.flush()
-                os.fsync(f.fileno())
+    try:
+        sheet = doc.getSheets().getByName("{sheet_item.text()}")
+    except:
+        return # Feuille introuvable
 
-            App.Console.PrintMessage(f"✅ Signal envoyé : {len(rows)} lignes vers {sheet_name}\n")
+    rows = {json.dumps(rows_to_export)}
+    start_col = {d_col}
+    start_row = {d_row}
+    
+    # Écriture optimisée
+    for i, row in enumerate(rows):
+        for j, val in enumerate(row):
+            cell = sheet.getCellByPosition(start_col + j, start_row + i)
+            try:
+                # On traite les nombres pour éviter le format texte dans Calc
+                v = val.replace(',', '.').strip()
+                cell.setValue(float(v))
+            except:
+                cell.setString(val)
+    
+    # On ramène la fenêtre au premier plan
+    frame = doc.getCurrentController().getFrame()
+    frame.getContainerWindow().setFocus()
+    frame.getContainerWindow().setVisible(True)
 
+if __name__ == "__main__":
+    export()
+"""
+                with open(script_transfert, "w", encoding="utf-8") as f:
+                    f.write(content)
+    
+                # Lancement SANS cacher la fenêtre et SANS attendre (plus rapide)
+                subprocess.Popen([PYTHON_LO, script_transfert])
+                App.Console.PrintMessage(f"🚀 Export vers {sheet_item.text()} envoyé.\\n")
+            else:
+                # GARDER VOTRE LOGIQUE ACTUELLE POUR UBUNTU (via bridge_trigger.json)
+                payload = {
+                            "file_path": file_path,
+                            "sheet_name": sheet_item.text(),
+                            "start_col": d_col,
+                            "start_row": d_row,
+                            "rows": rows_to_export
+                            }
+                with open(TRIGGER_PATH, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=4)
+                    f.flush()
+                    os.fsync(f.fileno())
+                App.Console.PrintMessage(f"✅ [Ubuntu] Signal envoyé via {TRIGGER_PATH}\n")
+                
         except Exception as e:
             App.Console.PrintError(f"❌ Erreur lors de l'exécution : {str(e)}\n")
-
-    # def run_instruction(self, item):
-    #     idx0 = item.index().sibling(item.row(), 0)
-    #     node = self.model.itemFromIndex(idx0)
-    #     data = node.parent().child(item.row(), 1).data(QtCore.Qt.UserRole)
-    #     sheet_name = node.parent().text()
-    #     file_path = node.parent().parent().data(QtCore.Qt.UserRole)
-    #     bom = App.ActiveDocument.getObject("BOM")
-    #     if not bom: return
-    #     start_cell, end_cell = bom.getNonEmptyRange()
-    #     last_column, last_row = self.addr_to_pos(end_cell)
-    #     # Mapping des colonnes basé sur la première ligne
-    #     mapping = {}
-    #     for c in range(last_column + 1):
-    #         header = bom.get(f"{get_column_letter(c)}1")
-    #         if header: mapping[header] = get_column_letter(c)
-    #     # print(f"mapping {mapping}")
-    #     d_col, d_row = self.addr_to_pos(data['dest'])
-    #     rows = []
-    #     for r in range(2, last_row + 1):
-    #         if (not data['filter_p'] or data['filter_p'].lower() in bom.get(f"B{r}").lower()) and \
-    #            (not data['filter_m'] or data['filter_m'].lower() in bom.get(f"H{r}").lower()):
-    #             row_vals = []
-    #             for col_name in data['selected_cols']:
-    #                 # print(f"col_name {col_name}")
-    #                 col_let = mapping[col_name]
-    #                 # print(f"{col_let}{r}")
-    #                 try:
-    #                     val = bom.get(f"{col_let}{r}")
-    #                 except:
-    #                     val=""
-    #                 row_vals.append(val)
-    #             rows.append(row_vals)
-    #     payload = {
-    #                 "file_path": file_path,
-    #                 "sheet_name": sheet_name,
-    #                 "start_col": d_col,
-    #                 "start_row": d_row,
-    #                 "rows": rows
-    #                 }
-    #
-    #     # print(f"{payload}")
-    #     script_path = os.path.join(App.getUserMacroDir(), "bridge_calc.py")
-    #     # print(f"script_path {script_path}")
-    #     json_payload = json.dumps(payload)
-    #     # print(f"json_payload {json_payload}")
-    #
-    #     # --- LOGIQUE DE DIAGNOSTIC AVANCÉ ---
-    #     # try:
-    #     #     # On utilise le chemin absolu de python3 pour éviter les problèmes de PATH
-    #     #     python_bin = "/usr/bin/python3"
-    #     #
-    #     #     process = subprocess.run(
-    #     #         [python_bin, script_path, json_payload],
-    #     #         capture_output=True,
-    #     #         text=True
-    #     #     )
-    #     #
-    #     #     # On affiche TOUT dans la console FreeCAD pour comprendre
-    #     #     App.Console.PrintMessage(f"--- DEBUG BRIDGE ---\n")
-    #     #     App.Console.PrintMessage(f"STDOUT: {process.stdout}\n")
-    #     #     App.Console.PrintMessage(f"STDERR: {process.stderr}\n")
-    #     #     App.Console.PrintMessage(f"Code retour: {process.returncode}\n")
-    #     #     App.Console.PrintMessage(f"--------------------\n")
-    #     #
-    #     #     if process.returncode != 0:
-    #     #         QtWidgets.QMessageBox.warning(self, "Erreur Bridge",
-    #     #             f"STDOUT: {process.stdout}\nSTDERR: {process.stderr}")
-    #     #
-    #     # except Exception as e:
-    #     #     App.Console.PrintError(f"Erreur d'exécution subprocess: {str(e)}\n")
-    #
-    #     # --- LOGIQUE D'ÉVASION DU SNAP ---
-    #     # try:
-    #     #     # On utilise 'usr/bin/env' avec l'option -u pour supprimer les variables Snap
-    #     #     # qui forcent Python à regarder dans le mauvais dossier
-    #     #     command = [
-    #     #         'usr/bin/env',
-    #     #         '-u', 'PYTHONPATH',
-    #     #         '-u', 'PYTHONHOME',
-    #     #         '-u', 'SNAP',
-    #     #         '-u', 'SNAP_NAME',
-    #     #         '/usr/bin/python3', script_path, json_payload
-    #     #     ]
-    #     #
-    #     #     # Note : on utilise shell=False pour la sécurité,
-    #     #     # mais on pointe vers le binaire absolu
-    #     #     process = subprocess.run(
-    #     #         command,
-    #     #         capture_output=True,
-    #     #         text=True,
-    #     #         executable='/usr/bin/env'
-    #     #     )
-    #     #
-    #     #     App.Console.PrintMessage(f"--- DEBUG ÉVASION ---\n")
-    #     #     App.Console.PrintMessage(f"STDOUT: {process.stdout}\n")
-    #     #     App.Console.PrintMessage(f"STDERR: {process.stderr}\n")
-    #     #
-    #     #     if "Module UNO chargé avec succès" in process.stdout:
-    #     #         App.Console.PrintMessage("🚀 Évasion réussie : LibreOffice contacté !\n")
-    #     # except Exception as e:
-    #     #     App.Console.PrintError(f"Erreur d'exécution subprocess: {str(e)}\n")
-    #     # Chemin où FreeCAD a le droit d'écrire
-    #     trigger_path = "/home/matthou/snap/freecad/common/bridge_trigger.json"
-    #
-    #     # try:
-    #     #     with open(trigger_path, "w", encoding="utf-8") as f:
-    #     #         json.dump(payload, f)
-    #     #     App.Console.PrintMessage("✅ Signal envoyé au surveillant externe (Calc).\n")
-    #     # except Exception as e:
-    #     #     App.Console.PrintError(f"❌ Erreur d'écriture du signal : {str(e)}\n")
-    #
-    #     try:
-    #         # Utiliser un fichier temporaire puis le renommer est la méthode la plus sûre
-    #         # mais ici un 'with' avec flush suffit généralement
-    #         with open(trigger_path, "w", encoding="utf-8") as f:
-    #             json.dump(payload, f)
-    #             f.flush()
-    #             os.fsync(f.fileno()) # Force l'écriture sur le disque
-    #         App.Console.PrintMessage("✅ Signal envoyé.\n")
-    #     except Exception as e:
-    #         App.Console.PrintError(f"❌ Erreur : {str(e)}\n")
-
-    # def context_menu(self, pos):
-    #     idx = self.tree.indexAt(pos)
-    #     if not idx.isValid(): return
-    #     item = self.model.itemFromIndex(idx.sibling(idx.row(), 0))
-    #     lvl = self.get_lvl(item)
-    #     menu = QtWidgets.QMenu()
-    #     if lvl == 0:
-    #         menu.addAction("📄 Ajouter Feuille").triggered.connect(lambda: self.add_sheet(item))
-    #     elif lvl == 1:
-    #         menu.addAction("➕ Ajouter Plage").triggered.connect(lambda: self.add_instruction(item))
-    #         menu.addAction("📥 Importer Biblio").triggered.connect(lambda: self.import_library(item))
-    #     elif lvl == 2:
-    #         menu.addAction("▶️ EXÉCUTER").triggered.connect(lambda: self.run_instruction(item))
-    #         menu.addAction("⚙️ Éditer").triggered.connect(lambda: self.edit_instruction_range(item))
-    #         menu.addAction("💾 Sauver Biblio").triggered.connect(lambda: self.export_library(item))
-    #     menu.addSeparator()
-    #     menu.addAction("🗑️ Supprimer").triggered.connect(lambda: self.delete_item(item))
-    #     menu.exec_(self.tree.viewport().mapToGlobal(pos))
 
     def context_menu(self, point):
         index = self.tree.indexAt(point)
@@ -699,7 +642,7 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
             action_del = menu.addAction("🗑️ Supprimer")
             action_del.triggered.connect(lambda: self.delete_item(item))
 
-        menu.exec_(self.tree.viewport().mapToGlobal(point))
+        menu.exec(self.tree.viewport().mapToGlobal(point))
 
     # --- HELPERS ---
     def edit_instruction_range(self, item):
@@ -768,7 +711,7 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         btn.clicked.connect(dialog.accept)
         lay.addWidget(btn)
 
-        if dialog.exec_() == QtWidgets.QDialog.Accepted:
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
             data.update({
                 'type': 'instruction',
                 'selected_cols': [lw_cols.item(i).text() for i in range(lw_cols.count()) if lw_cols.item(i).checkState() == QtCore.Qt.Checked],
@@ -845,7 +788,22 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         for char in m.group(1): c = c * 26 + (ord(char) - ord('A') + 1)
         return c - 1, int(m.group(2)) - 1
 
-    # def start_libreoffice_listen(self): subprocess.Popen('soffice --accept="socket,host=localhost,port=2002;urp;"', shell=True)
+    def start_libreoffice_listen(self):
+        """Lance LibreOffice en mode 'écoute' pour permettre la connexion UNO."""
+        if SYSTEM == "Windows":
+            # Recherche de l'exécutable sur Windows
+            lo_exe = r"C:\Program Files\LibreOffice\program\soffice.exe"
+            if not os.path.exists(lo_exe):
+                lo_exe = "soffice.exe" # Tentative via le PATH global
+            
+            # cmd = f'"{lo_exe}" --accept="socket,host=localhost,port=2002;urp;" --nologo --nodefault'
+            cmd = f'"{lo_exe}" --accept="socket,host=localhost,port=2002;urp;"'
+            subprocess.Popen(cmd, shell=True)
+        else:
+            # Commande standard pour Ubuntu / Linux
+            subprocess.Popen('soffice --accept="socket,host=localhost,port=2002;urp;"', shell=True)
+        
+        App.Console.PrintMessage(f"🚀 LibreOffice démarré en mode écoute sur {SYSTEM}.\n")
 
     def manage_library(self):
         if not os.path.exists(self.global_json):
@@ -895,7 +853,7 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
                 App.Console.PrintMessage("✅ Bibliothèque mise à jour.\n")
 
             btn_delete.clicked.connect(do_delete)
-            dialog.exec_()
+            dialog.exec()
 
         except Exception as e:
             App.Console.PrintError(f"❌ Erreur gestion biblio : {str(e)}\n")

@@ -681,7 +681,7 @@ class FabricationDialog(QtGui.QDialog):
         
         # Élément Global "Toutes"
         all_item = QtGui.QTreeWidgetItem(self.filterTree, ["Toutes"])
-        all_item.setFlags(all_item.flags() | QtCore.Qt.ItemIsTristate | QtCore.Qt.ItemIsUserCheckable)
+        all_item.setFlags(all_item.flags() | QtCore.Qt.ItemIsAutoTristate | QtCore.Qt.ItemIsUserCheckable)
         all_item.setCheckState(0, QtCore.Qt.Unchecked) 
         all_item.setData(2, QtCore.Qt.UserRole, "ALL_OPERATIONS") 
 
@@ -689,7 +689,7 @@ class FabricationDialog(QtGui.QDialog):
         
         for category_name, operations in self.config.items():
             category_item = QtGui.QTreeWidgetItem(all_item, [category_name])
-            category_item.setFlags(category_item.flags() | QtCore.Qt.ItemIsTristate | QtCore.Qt.ItemIsUserCheckable)
+            category_item.setFlags(category_item.flags() | QtCore.Qt.ItemIsAutoTristate | QtCore.Qt.ItemIsUserCheckable)
             
             category_checked_count = 0
             
@@ -815,6 +815,17 @@ class FabricationDialog(QtGui.QDialog):
                             drawer_references_per_body[target_obj_body] = drawer_references_per_body.get(target_obj_body, 0) + 1
         # FIN NOUVEAU PRÉ-CALCUL
         
+        # Recherche des montants qui ont des tablettes avec crémaillères encastrées ou des trous pour comptabiliser les rainures ou les trous à réaliser
+        part_rainures_cremaillere = []
+        tablette_list = [o for o in objects if "tablette" in o.Label.lower()]
+        for tab_obj in tablette_list:
+            if hasattr(tab_obj, "Cremaillere"):
+                if tab_obj.Cremaillere in [ "Encastree", "Trous"]:
+                    for prop_name in ["obj_gauche", "obj_droit"]:
+                        if hasattr(tab_obj, prop_name):
+                            target_obj = getattr(tab_obj, prop_name)
+                            if target_obj: part_rainures_cremaillere.append(target_obj)
+            
         # 2. Exécution des règles (Boucle sur les objets)
         for obj in objects:
             
@@ -924,6 +935,9 @@ class FabricationDialog(QtGui.QDialog):
                         # 4. Sortir de la boucle fond_objects si l'opération a déjà été ajoutée pour l'objet actuel
                         if "Op_Rainure_Fond" in results.get(obj, {}):
                             break
+            if "Op_Rainure_Cremaillere" in operations_to_process:
+                if _get_parent_part(obj) in part_rainures_cremaillere:
+                    results.setdefault(obj, {})["Op_Rainure_Cremaillere"] = 2.0
 
             # --- NOUVELLES RÈGLES BASÉES SUR LE MATÉRIAU (BOM_mat) ---
             
@@ -996,7 +1010,7 @@ def run():
         
     dialog = FabricationDialog()
     if dialog.layout(): 
-        dialog.exec_()
+        dialog.exec()
     else:
         App.Console.PrintWarning("La boîte de dialogue n'a pas pu être créée.\n")
 

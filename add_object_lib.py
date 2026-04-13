@@ -152,7 +152,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
             shape = myDoc.addObject('PartDesign::LinearPattern',name)
             shape.Label = objStruct[4]
             shape.Originals = myDoc.getObject(subobj.Name)
-            shape.Mode = 'length'
+            shape.Mode = 'Extent' #'length'
             shape.Occurrences = 2
             shape.Direction = (myDoc.getObject(body.Origin.OriginFeatures[2].Name),[''])
             body.addObject(shape)
