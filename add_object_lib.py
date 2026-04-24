@@ -130,6 +130,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
     label = objStruct[2]
     shape = myDoc.addObject('PartDesign::AdditiveBox',objBaseName)
     shape.Label = label
+    add_BOM_Mat(shape)
     body.addObject(shape)
     if label != shape.Label:
         for ele in elements_Obj:
@@ -177,3 +178,4 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
                 body.setExpression(ele[PROP_NAME], ele[PROP_CONTENU])
 
     if parentObjLabel != None: myDoc.getObjectsByLabel(parentObjLabel)[0].addObject(part)
+    return part

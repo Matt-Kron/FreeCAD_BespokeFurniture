@@ -253,5 +253,4 @@ def run_assignment_macro(force_ui=None):
         apply_assignments(res["tablette"], res["gauche"], res["droit"], dlg.schema)
 
 if __name__ == "__main__":
-    App.Console.PrintMessage("toto")
     run_assignment_macro()

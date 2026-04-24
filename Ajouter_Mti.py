@@ -1,3 +1,5 @@
+import FreeCAD as App
+import FreeCADGui as Gui
 from FreeCAD_BespokeFurniture.add_object_lib import addObjectPartBodyBox
 
 dftStruct = (
@@ -8,6 +10,13 @@ dftStruct = (
                 "Mt i rainure",
             )
 
-addObjectPartBodyBox(dftStruct, FreeCAD.ActiveDocument,"Caisson")
+sel_obj = Gui.Selection.getSelection()
+
+part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, "Caisson")
+
+if sel_obj:
+    Gui.Selection.addSelection(part)
+    import FreeCAD_BespokeFurniture.MtEntreDeuxTv as MacroVertical
+    MacroVertical.run_assignment_macro()
 
 
