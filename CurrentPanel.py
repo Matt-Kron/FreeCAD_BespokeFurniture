@@ -9,7 +9,7 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtGui
-from lib_menuiserie import *
+from FreeCAD_BespokeFurniture.lib_menuiserie import *
 
 
 __dir__ = os.path.dirname(__file__)
@@ -35,7 +35,7 @@ class CurrentPanel_dialog(QtCore.QObject):
         fcDoc = App.ActiveDocument
         if hasattr(fcDoc, 'PanneauManager'):
             if hasattr(fcDoc.PanneauManager, "liste_panneaux"):
-                current_panel = getCurrentWoodPanel().split(';')[0]
+                current_panel = getCurrentWoodPanel()[0].split(';')[0]
                 lines = fcDoc.PanneauManager.liste_panneaux
                 i = 0
                 for line in lines[1:]:  

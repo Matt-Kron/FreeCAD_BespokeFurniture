@@ -3,6 +3,7 @@ import FreeCADGui as Gui
 from PySide import QtCore, QtGui, QtWidgets
 from FreeCAD_BespokeFurniture.Ajouter_Tab import Add_tab
 from FreeCAD_BespokeFurniture.lib_menuiserie import *
+from FreeCAD_BespokeFurniture.Objects_classes import bspfObj
 import os
 
 __dir__ = os.path.dirname(__file__)
@@ -53,13 +54,16 @@ class ShelfDialog(QtWidgets.QDialog):
     def __init__(self, min_height, parent=None):
         super(ShelfDialog, self).__init__(parent)
         self.min_height = min_height
+        self.objects = []
+        self.obj1, self.obj2 = get_selected_objects()
+        self.group_index = None
         self.setup_ui()
 
     def setup_ui(self):
         # Charger le fichier UI
         ui_file = __dir__ + "/Add_Several_Tab.ui"
         self.ui = Gui.PySideUic.loadUi(ui_file)
-        
+
         # Configurer la fenêtre
         self.setWindowTitle("Ajouter des étagères")
         self.setMinimumWidth(600)
@@ -103,14 +107,14 @@ class ShelfDialog(QtWidgets.QDialog):
         self.cancel_button.clicked.connect(self.reject)
         
         # Configurer les montants
-        obj1, obj2 = get_selected_objects()
-        if obj1.TypeId != "App::Part":
-            obj1_p = get_parent_part(obj1)
-        if obj2.TypeId != "App::Part":
-            obj2_p = get_parent_part(obj2)
+        # obj1, obj2 = get_selected_objects()
+        if self.obj1.TypeId != "App::Part":
+            obj1_p = get_parent_part(self.obj1)
+        if self.obj2.TypeId != "App::Part":
+            obj2_p = get_parent_part(self.obj2)
         if obj1_p.Placement.Base.x < obj2_p.Placement.Base.x:
-            obj_left = obj1
-            obj_right = obj2
+            obj_left = self.obj1
+            obj_right = self.obj2
         self.ui.label_LeftJamb.setText(obj_left.Label)
         self.ui.label_LeftJamb_height.setText(str(get_useful_height(obj_left)))
         # self.ui.label_LeftJamb.setStyleSheet("""
@@ -141,40 +145,41 @@ class ShelfDialog(QtWidgets.QDialog):
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.addWidget(self.ui)
 
-    def fill_param_model(self):
-        if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Parametres'):
-            for prop_name in App.ActiveDocument.VarSet.Parametres.PropertiesList:
-                if "epaisseur" in prop_name.lower():
-                    prop_value = getattr(App.ActiveDocument.VarSet.Parametres, prop_name)
-                    item_prop = QtGui.QStandardItem(prop_name)
-                    item_value = QtGui.QStandardItem(f"{prop_value:.1f}")
-                    self.param_model.appendRow([item_prop, item_value])
+    # def fill_param_model(self):
+    #     if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Parametres'):
+    #         for prop_name in App.ActiveDocument.VarSet.Parametres.PropertiesList:
+    #             if "epaisseur" in prop_name.lower():
+    #                 prop_value = getattr(App.ActiveDocument.VarSet.Parametres, prop_name)
+    #                 item_prop = QtGui.QStandardItem(prop_name)
+    #                 item_value = QtGui.QStandardItem(f"{prop_value:.1f}")
+    #                 self.param_model.appendRow([item_prop, item_value])
+    #
+    # def fill_panel_model(self):
+    #     if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Liste_Panneaux'):
+    #         lines = App.ActiveDocument.VarSet.Liste_Panneaux.split('\n')
+    #         for line in lines[1:]:
+    #             if line.strip():
+    #                 parts = line.split(';')
+    #                 if len(parts) >= 5:
+    #                     nom_abrege = parts[0]
+    #                     try:
+    #                         epaisseur = float(parts[4])
+    #                         item_nom = QtGui.QStandardItem(nom_abrege)
+    #                         item_epaisseur = QtGui.QStandardItem(f"{epaisseur:.1f}")
+    #                         self.panel_model.appendRow([item_nom, item_epaisseur])
+    #                     except ValueError:
+    #                         continue
 
-    def fill_panel_model(self):
-        if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Liste_Panneaux'):
-            lines = App.ActiveDocument.VarSet.Liste_Panneaux.split('\n')
-            for line in lines[1:]:
-                if line.strip():
-                    parts = line.split(';')
-                    if len(parts) >= 5:
-                        nom_abrege = parts[0]
-                        try:
-                            epaisseur = float(parts[4])
-                            item_nom = QtGui.QStandardItem(nom_abrege)
-                            item_epaisseur = QtGui.QStandardItem(f"{epaisseur:.1f}")
-                            self.panel_model.appendRow([item_nom, item_epaisseur])
-                        except ValueError:
-                            continue
-
-    def on_param_selection_changed(self, selected, deselected):
-        if selected.indexes():
-            self.panel_table_view.selectionModel().clearSelection()
-
-    def on_panel_selection_changed(self, selected, deselected):
-        if selected.indexes():
-            self.param_table_view.selectionModel().clearSelection()
+    # def on_param_selection_changed(self, selected, deselected):
+    #     if selected.indexes():
+    #         self.panel_table_view.selectionModel().clearSelection()
+    #
+    # def on_panel_selection_changed(self, selected, deselected):
+    #     if selected.indexes():
+    #         self.param_table_view.selectionModel().clearSelection()
 
     def update_sliders(self):
+        previous_shelves_number = len(self.sliders)
         for slider in self.sliders:
             self.sliders_layout.removeWidget(slider)
             slider.deleteLater()
@@ -191,10 +196,17 @@ class ShelfDialog(QtWidgets.QDialog):
             slider.setRange(0, int(self.min_height))
             slider.setValue(int(self.min_height * (i+1) / (num_shelves + 1)))
             slider.setEnabled(self.distribution_arbitrary.isChecked())
+            slider.sliderMoved.connect(lambda state, x=i : self.sliderChanged(x))
             self.sliders_layout.addWidget(label)
             self.sliders_layout.addWidget(slider)
             self.slider_labels.append(label)
             self.sliders.append(slider)
+            if (i+1) > previous_shelves_number:
+                self.addShelf()
+                self.updatePosition(i)
+        if num_shelves < previous_shelves_number:
+            for obj in self.objects[num_shelves:]:
+                obj.removeObject()
 
     def get_selected_thickness(self):
         # if self.param_table_view.selectionModel().selectedIndexes():
@@ -222,6 +234,51 @@ class ShelfDialog(QtWidgets.QDialog):
         else:
             return [slider.value() for slider in self.sliders]
 
+    def addShelf(self):
+        Gui.Selection.clearSelection()
+        Gui.Selection.addSelection(self.obj1)
+        Gui.Selection.addSelection(self.obj2)
+        obj = bspfObj()
+        part = Add_tab()
+        obj.object = find_additive_box(part)
+        if not self.group_index: self.group_index = getMaxShelvesIndex() + 1
+        obj.setTag(groupe_etageres = f"ETG{self.group_index}")
+        obj.temp = True
+        self.objects.append(obj)
+
+    def updatePosition(self, index):
+        if isinstance(index, str):
+            if index == "all":
+                i = 0
+                for slider in self.sliders:
+                    self.objects[i].part.setExpression('.Placement.Base.z', None)
+                    self.objects[i].part.Placement.Base.z = slider.value()
+                    i += 1
+                # self.objects[0]._object.Document.recompute()
+        if isinstance(index, int):
+            self.objects[index].part.setExpression('.Placement.Base.z', None)
+            self.objects[index].part.Placement.Base.z =  self.sliders[index].value()
+            msgCsl(f"{__name__} position étagère {index} à {self.sliders[index].value()}")
+            # self.objects[index]._object.Document.recompute()
+
+    def sliderChanged(self, index):
+        self.updatePosition(index)
+
+    def accept(self):
+        for obj in self.objects:
+            obj.temp = False
+        super().accept()
+        self.reject()
+
+    def reject(self):
+        for obj in self.objects:
+            if obj.temp: obj.removeObject()
+        for slider in self.sliders:
+            self.sliders_layout.removeWidget(slider)
+            slider.deleteLater()
+        self.sliders = []
+        super().reject()
+
 def add_shelves(shelf_positions):
     selection = Gui.Selection.getSelection()
     if len(selection) != 2:
@@ -246,8 +303,9 @@ def main():
         return
 
     dialog = ShelfDialog(min_height)
-    if dialog.exec() == QtWidgets.QDialog.Accepted:
-        shelf_positions = dialog.get_shelf_positions()
-        add_shelves(shelf_positions)
+    dialog.show()
+    # if dialog.exec() == QtWidgets.QDialog.Accepted:
+    #     shelf_positions = dialog.get_shelf_positions()
+    #     add_shelves(shelf_positions)
 
 main()
