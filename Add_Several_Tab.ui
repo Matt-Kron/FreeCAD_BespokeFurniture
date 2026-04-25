@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>798</width>
     <height>621</height>
    </rect>
   </property>
@@ -26,17 +26,45 @@
       <string>Options</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Nombre d'étagères :</string>
-        </property>
-       </widget>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QRadioButton" name="distributionEquidistantCenter">
+          <property name="text">
+           <string>Équidistante (centre)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="distributionEquidistantNoThickness">
+          <property name="text">
+           <string>Équidistante (sans épaisseur)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="distributionArbitrary">
+          <property name="text">
+           <string>Arbitraire</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>Répartition :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Nombre d'étagères :</string>
         </property>
        </widget>
       </item>
@@ -70,12 +98,12 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout">
+      <item row="2" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
-         <widget class="QRadioButton" name="distributionEquidistantCenter">
+         <widget class="QRadioButton" name="relativePosition">
           <property name="text">
-           <string>Équidistante (centre)</string>
+           <string>Relative</string>
           </property>
           <property name="checked">
            <bool>true</bool>
@@ -83,20 +111,20 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="distributionEquidistantNoThickness">
+         <widget class="QRadioButton" name="absolutePosition">
           <property name="text">
-           <string>Équidistante (sans épaisseur)</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QRadioButton" name="distributionArbitrary">
-          <property name="text">
-           <string>Arbitraire</string>
+           <string>Absolue</string>
           </property>
          </widget>
         </item>
        </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Position</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

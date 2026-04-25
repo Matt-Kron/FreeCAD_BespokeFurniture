@@ -28,11 +28,11 @@ def get_useful_height(obj):
 
         additive_box = None
         for feature in body.Group:
-            if hasattr(feature, "Shape") and feature.Shape.isValid() and feature.Label == "AdditiveBox":
+            if hasattr(feature, "Shape") and feature.Shape.isValid() and feature.TypeId == "PartDesign::AdditiveBox":
                 additive_box = feature
                 break
         if not additive_box:
-            QtWidgets.QMessageBox.warning(None, "Erreur", "Aucun AdditiveBox trouvé dans le Body.")
+            QtWidgets.QMessageBox.warning(None, "Erreur", f"Aucun AdditiveBox trouvé dans le Body {body.Label}.")
             return None
 
         bbox = additive_box.Shape.BoundBox
@@ -50,14 +50,38 @@ def get_min_height(obj1, obj2):
 
     return min(height1, height2)
 
+def addObj(fc_obj):
+    obj = bspfObj()
+    obj.object = fc_obj
+    obj.temp = False
+    return obj
+
 class ShelfDialog(QtWidgets.QDialog):
-    def __init__(self, min_height, parent=None):
+    def __init__(self, min_height, obj1, obj2, parent=None, mode = "V0", duplicate = None):
         super(ShelfDialog, self).__init__(parent)
         self.min_height = min_height
+        self.mode = mode
+        msgCsl(f"{__name__} self.mode = {self.mode}")
         self.objects = []
-        self.obj1, self.obj2 = get_selected_objects()
         self.group_index = None
+        if int(self.mode[1]):
+            self.duplicate = duplicate
+            self.initObj()
+        self.obj1, self.obj2 = obj1, obj2
+
         self.setup_ui()
+
+    def initObj(self):
+        objects = [addObj(self.duplicate)]
+        self.group_index = int(getObjTag(self.duplicate)["groupe_etageres"][3:])
+        target_group = getObjTag(self.duplicate)["groupe_etageres"]
+        fcDoc = self.duplicate.Document
+        for o in fcDoc.Objects:
+            tag_prop = getObjTag(o)
+            if tag_prop:
+                if tag_prop["groupe_etageres"] == target_group and o.Name != self.duplicate.Name:
+                    objects.append(addObj(o))
+        self.objects = sorted(objects, key=lambda o:o.part.Placement.Base.z)
 
     def setup_ui(self):
         # Charger le fichier UI
@@ -70,6 +94,8 @@ class ShelfDialog(QtWidgets.QDialog):
 
         # Récupérer les widgets depuis le fichier UI
         self.num_shelves_spin = self.ui.findChild(QtWidgets.QSpinBox, "numShelvesSpin")
+        if self.objects:
+            self.num_shelves_spin.setValue(len(self.objects))
         self.distribution_equidistant_center = self.ui.findChild(QtWidgets.QRadioButton, "distributionEquidistantCenter")
         self.distribution_equidistant_no_thickness = self.ui.findChild(QtWidgets.QRadioButton, "distributionEquidistantNoThickness")
         self.distribution_arbitrary = self.ui.findChild(QtWidgets.QRadioButton, "distributionArbitrary")
@@ -108,11 +134,11 @@ class ShelfDialog(QtWidgets.QDialog):
         
         # Configurer les montants
         # obj1, obj2 = get_selected_objects()
-        if self.obj1.TypeId != "App::Part":
-            obj1_p = get_parent_part(self.obj1)
-        if self.obj2.TypeId != "App::Part":
-            obj2_p = get_parent_part(self.obj2)
-        if obj1_p.Placement.Base.x < obj2_p.Placement.Base.x:
+        # if self.obj1.TypeId != "App::Part":
+        #     obj1_p = get_parent_part(self.obj1)
+        # if self.obj2.TypeId != "App::Part":
+        #     obj2_p = get_parent_part(self.obj2)
+        if self.obj1.Placement.Base.x < self.obj2.Placement.Base.x:
             obj_left = self.obj1
             obj_right = self.obj2
         self.ui.label_LeftJamb.setText(obj_left.Label)
@@ -179,7 +205,8 @@ class ShelfDialog(QtWidgets.QDialog):
     #         self.param_table_view.selectionModel().clearSelection()
 
     def update_sliders(self):
-        previous_shelves_number = len(self.sliders)
+        previous_shelves_number = len(self.objects)
+        msgCsl(f"{__name__} previous_shelves_number = {previous_shelves_number}, current shelves number = {self.num_shelves_spin.value()}")
         for slider in self.sliders:
             self.sliders_layout.removeWidget(slider)
             slider.deleteLater()
@@ -203,10 +230,16 @@ class ShelfDialog(QtWidgets.QDialog):
             self.sliders.append(slider)
             if (i+1) > previous_shelves_number:
                 self.addShelf()
-                self.updatePosition(i)
+            # if self.objects and i < len(self.objects):
+            self.objects[i].part.Visibility = True
+            # self.objects[i].temp = False
+            self.updatePosition(i)
         if num_shelves < previous_shelves_number:
-            for obj in self.objects[num_shelves:]:
-                obj.removeObject()
+            for i in range(num_shelves, previous_shelves_number):
+                self.objects[i].part.Visibility = False
+                # self.objects[i].temp = True
+            # for obj in self.objects[num_shelves:]:
+            #     obj.removeObject()
 
     def get_selected_thickness(self):
         # if self.param_table_view.selectionModel().selectedIndexes():
@@ -266,7 +299,10 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def accept(self):
         for obj in self.objects:
-            obj.temp = False
+            if obj.part.Visibility:
+                obj.temp = False
+            else:
+                obj.temp = True
         super().accept()
         self.reject()
 
@@ -294,18 +330,47 @@ def add_shelves(shelf_positions):
         
 
 def main():
-    obj1, obj2 = get_selected_objects()
-    if not obj1 or not obj2:
-        return
+    selection = Gui.Selection.getSelection()
+    ''' mode definition
+        V for vertical duplicated objects, shelves
+        H for horizontal duplicated objects, jambs
+        0 when no duplicated objects in selection
+        1 when duplicated objects in selection
+    '''
+    mode = "V0"
+    obj1, obj2, duplicate = None, None, None
+    for _obj in selection:
+        obj = find_additive_box(get_parent_part(_obj))
+        if hasattr(obj, "bspf_tag"):
+            tag_prop = getObjTag(obj)
+            if tag_prop:
+                if "ETG" in tag_prop["groupe_etageres"]:
+                    mode = "V1"
+                    obj1 = obj.obj_gauche
+                    obj2 = obj.obj_droit
+                    duplicate = obj
+                    userMsg(f"Duplicated object found {obj.Label}")
+                    msgCsl(f"{obj.Label}, obj1 = {obj1.Label}, obj2 = {obj2.Label}")
+                    break
+    if len(selection) == 2:
+        obj1, obj2 = get_parent_part(selection[0]), get_parent_part(selection[1])
+        msgCsl(f"{__name__} obj1 = {obj1.Label}, obj2 = {obj2.Label}")
+    # obj1, obj2 = get_selected_objects()
+    # if not obj1 or not obj2:
+    #     return
 
-    min_height = get_min_height(obj1, obj2)
-    if not min_height:
-        return
+    if obj1 and obj2:
+        min_height = get_min_height(obj1, obj2)
+        if not min_height:
+            userMsg("No height value could be extract from selection.")
+            return
 
-    dialog = ShelfDialog(min_height)
-    dialog.show()
-    # if dialog.exec() == QtWidgets.QDialog.Accepted:
-    #     shelf_positions = dialog.get_shelf_positions()
-    #     add_shelves(shelf_positions)
+        dialog = ShelfDialog(min_height, obj1, obj2, mode = mode, duplicate = duplicate)
+        dialog.show()
+        # if dialog.exec() == QtWidgets.QDialog.Accepted:
+        #     shelf_positions = dialog.get_shelf_positions()
+        #     add_shelves(shelf_positions)
+    else:
+        userMsg("No valid selection.")
 
 main()

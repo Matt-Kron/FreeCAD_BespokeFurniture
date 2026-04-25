@@ -64,6 +64,8 @@ def userMsg(message):
     
 def get_parent_part(obj):
     current = obj
+    if current and current.TypeId == "App::Part":
+        return current
     while current:
         # 1. Tenter d'accéder directement au parent structurel (si disponible)
         if hasattr(current, "getParent") and current.getParent():
@@ -174,7 +176,7 @@ def getMaxShelvesIndex():
     maxIndex = 0
     if shelves:
         for obj in shelves:
-            index = obj.bspf_tag.split(";")[2][3:]
+            index = int(obj.bspf_tag.split(";")[2][3:])
             if index > maxIndex: maxIndex = index
     return maxIndex
 
