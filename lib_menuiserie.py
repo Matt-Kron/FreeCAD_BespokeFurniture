@@ -138,14 +138,14 @@ def getParentViewObject(oFC):
 def getCurrentWoodPanel():
     fcDoc = App.ActiveDocument
     if hasattr(fcDoc, WOODPANELS_VarSet):
-        panels_list = fcDoc.getObject(WOODPANELS_VarSet)
-        if hasattr(panels_list, WOODPANELS_ListProperty):
-            if not hasattr(panels_list, "current_panel"):
-                panels_list.addProperty("App::Integer", "current_panel")
+        panels_obj = fcDoc.getObject(WOODPANELS_VarSet)
+        if hasattr(panels_obj, WOODPANELS_ListProperty):
+            if not hasattr(panels_obj, "current_panel"):
+                panels_obj.addProperty("App::Integer", "current_panel")
                 setattr(fcDoc.PanneauManager, "current_panel", 1)
-            return getattr(panels_list, WOODPANELS_ListProperty)[getattr(panels_list, "current_panel")], getattr(panels_list, "current_panel")
+            return getattr(panels_obj, WOODPANELS_ListProperty)[getattr(panels_obj, "current_panel")], getattr(panels_obj, "current_panel")
         else:
-            userMsg(f"No {WOODPANELS_ListProperty} property found in {panels_list.Label}")
+            userMsg(f"No {WOODPANELS_ListProperty} property found in {panels_obj.Label}")
             return []
     else:
         userMsg(f"No {WOODPANELS_VarSet} object found in active docuement")
@@ -155,9 +155,9 @@ def getPanelsShortName():
     fcDoc = App.ActiveDocument
     panels_shortnames = []
     if hasattr(fcDoc, WOODPANELS_VarSet):
-        panels_list = fcDoc.getObject(WOODPANELS_VarSet)
-        if hasattr(panels_list, WOODPANELS_ListProperty):
-            panels = getattr(panels_list, WOODPANELS_ListProperty)[1:]
+        panels_obj = fcDoc.getObject(WOODPANELS_VarSet)
+        if hasattr(panels_obj, WOODPANELS_ListProperty):
+            panels = getattr(panels_obj, WOODPANELS_ListProperty)[1:]
             for panel in panels:
                 panels_shortnames.append(panel.split(";")[0])
     return panels_shortnames
@@ -176,7 +176,7 @@ def getMaxShelvesIndex():
     maxIndex = 0
     if shelves:
         for obj in shelves:
-            index = int(obj.bspf_tag.split(";")[2][3:])
+            index = int(obj.bspf_tag.split(";")[2][4:])
             if index > maxIndex: maxIndex = index
     return maxIndex
 
@@ -189,6 +189,13 @@ def add_BOM_Mat(obj):
     panels_shortnames = getPanelsShortName()
     obj.BOM_mat = panels_shortnames
     obj.BOM_mat = getCurrentWoodPanel()[1] - 1
+
+def get_BOM_mat_thickness(obj):
+    if hasattr(obj, "BOM_mat"):
+        # return getPanelsShortName()[obj.BOM_mat].split("x")[-1]
+        return float(obj.BOM_mat.split("x")[-1])
+    else:
+        return 0
     
 def getObjTag(obj):
     tag_prop = {}
@@ -207,7 +214,7 @@ def getLastEtgGrpIndex():
     for obj in fcDoc.Objects:
         tag_prop = getObjTag(obj)
         if tag_prop:
-            index = int(tag_prop["groupe_etageres"][3:])
+            index = int(tag_prop["groupe_etageres"][4:])
             max_index = max(max_index, index)
     return max_index
 

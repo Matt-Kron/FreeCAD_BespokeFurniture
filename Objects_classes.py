@@ -8,7 +8,10 @@ class bspfObj:
         self.caisson = "" # second field of bspf_tag property, defining the owner sub-assembly
         self.group = "" # second field of bspf_tag property, defining the group (shelves, jambs)
         self._object = None # FreeCAD object that define the geometry, might be a PartDeisgn:: AdditiveBox
-        self.part = None # Part contener of self.object
+        self.part = None # Part container of self.object
+        self.thickness = 0
+        self.temp = False
+        self.caisson = ""
 
     def getTag(self):
         if self._object:
@@ -36,6 +39,7 @@ class bspfObj:
         self._object = obj
         self.getPart()
         self.getTag()
+        self.thickness = get_BOM_mat_thickness(obj)
 
     def setTag(self, typ = None, caisson = None, groupe_etageres = None):
         setObjTag(self._object, typ, caisson, groupe_etageres)
