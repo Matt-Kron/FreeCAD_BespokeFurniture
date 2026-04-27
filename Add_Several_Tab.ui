@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
+    <width>805</width>
     <height>621</height>
    </rect>
   </property>
@@ -146,6 +146,13 @@
        </layout>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButton_extObj">
+     <property name="text">
+      <string>Choix des objets aux extrémités</string>
+     </property>
     </widget>
    </item>
    <item>

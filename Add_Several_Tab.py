@@ -6,6 +6,8 @@ from FreeCAD_BespokeFurniture.Ajouter_Mti import Add_mti
 from FreeCAD_BespokeFurniture.lib_menuiserie import *
 from FreeCAD_BespokeFurniture.Objects_classes import bspfObj
 from FreeCAD_BespokeFurniture.PartBetween2Other import classify_object
+from FreeCAD_BespokeFurniture.objectsChoice import ObjChoiceDialog
+
 import os
 
 __dir__ = os.path.dirname(__file__)
@@ -188,6 +190,7 @@ class ShelfDialog(QtWidgets.QDialog):
         self.ui.absolutePosition.toggled.connect(self.update_sliders)
         self.ui.relativePosition.toggled.connect(self.update_sliders)
         self.ui.checkBox_BackProp.toggled.connect(self.backPropToggled)
+        self.ui.pushButton_extObj.clicked.connect(self.ObjExtChoice)
 
         # Initialiser les sliders
         self.sliders = []
@@ -396,6 +399,13 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def backPropToggled(self):
         self.backProp = self.ui.checkBox_BackProp.isChecked()
+
+    def ObjExtChoice(self):
+        dialog = ObjChoiceDialog()
+        if dialog.ui.exec() == QtWidgets.QDialog.Accepted:
+            return dialog.objs
+        else:
+            return []
 
     def accept(self):
         for obj in self.objects:
