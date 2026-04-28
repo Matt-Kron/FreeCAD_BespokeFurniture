@@ -70,11 +70,41 @@ class ShelfDialog(QtWidgets.QDialog):
         self.group_index = None
         self.backProp = False
         self.group_type = None
+        self.objL, self.objR, self.objB, self.objT = None, None, None, None
         if int(self.mode[1]):
             self.duplicate = duplicate
             self.initObj()
-        self.obj1, self.obj2 = obj1, obj2
+        # self.objL, self.obj2 = obj1, obj2
         self.heightObjRef = obj1 if get_useful_height(obj1, mode[0]) == min_height else obj2
+        fcDoc = obj1.Document
+        if self.mode[0] == "V":
+            if obj1.Placement.Base.x < obj2.Placement.Base.x:
+                self.objL = obj1
+                self.objR = obj2
+            else:
+                self.objL = obj2
+                self.objR = obj1
+            if "Mt g p" in self.objL.Label or "Mt d p" in self.objR.Label:
+                self.objB = fcDoc.getObjectsByLabel("Tv inf p")[0]
+                self.objT = fcDoc.getObjectsByLabel("Tv sup p")[0]
+            else:
+                box = find_additive_box(self.heightObjRef)
+                if hasattr(box, "obj_dessous"): self.objB = box.obj_dessous
+                if hasattr(box, "obj_dessus"): self.objT = box.obj_dessus
+        if self.mode[0] == "H":
+            if obj1.Placement.Base.z < obj2.Placement.Base.z:
+                self.objB = obj1
+                self.objT = obj2
+            else:
+                self.objB = obj2
+                self.objT = obj1
+            if "Tv inf p" in self.objB.Label or "Tv sup p" in self.objT.Label:
+                self.objL = fcDoc.getObjectsByLabel("Mt g p")[0]
+                self.objR = fcDoc.getObjectsByLabel("Mt d p")[0]
+            else:
+                box = find_additive_box(self.heightObjRef)
+                if hasattr(box, "obj_gauche"): self.objL = box.obj_gauche
+                if hasattr(box, "obj_droit"): self.objR = box.obj_droit
         self.placementProp = ".Placement.Base.z" if mode[0] == "V" else ".Placement.Base.x"
 
         self.setup_ui()
@@ -159,34 +189,36 @@ class ShelfDialog(QtWidgets.QDialog):
         #     obj1_p = get_parent_part(self.obj1)
         # if self.obj2.TypeId != "App::Part":
         #     obj2_p = get_parent_part(self.obj2)
+
+        # setup external parts labels
         if self.mode[0] == "V":
-            if self.obj1.Placement.Base.x < self.obj2.Placement.Base.x:
-                obj_left = self.obj1
-                obj_right = self.obj2
+            self.ui.label_LeftJamb.setText(f"<<{self.objL.Label}>> hauteur")
+            self.ui.label_LeftJamb_height.setText(str(get_useful_height(self.objL, self.mode[0])))
+            self.ui.label_RightJamb.setText(f"<<{self.objR.Label}>> hauteur")
+            self.ui.label_RightJamb_height.setText(str(get_useful_height(self.objR, self.mode[0])))
+            if self.objB:
+                self.ui.label_objB.setText(f"<<{self.objB.Label}>> épaisseur")
+                self.bottom_thickness_edit.setText(str(find_additive_box(self.objB).Shape.BoundBox.ZLength))
+                self.ui.label_objT.setText(f"<<{self.objT.Label}>> épaisseur")
+                self.top_thickness_edit.setText(str(find_additive_box(self.objT).Shape.BoundBox.ZLength))
         if self.mode[0] == "H":
-            if self.obj1.Placement.Base.z < self.obj2.Placement.Base.z:
-                obj_left = self.obj1
-                obj_right = self.obj2
-        self.ui.label_LeftJamb.setText(obj_left.Label)
-        self.ui.label_LeftJamb_height.setText(str(get_useful_height(obj_left, self.mode[0])))
-        # self.ui.label_LeftJamb.setStyleSheet("""
-        #     QLabel {
-        #         transform: rotate(90deg);
-        #         transform-origin: center;
-        #         min-height: 100px;
-        #         min-width: 50px;
-        #     }
-        # """)
-        self.ui.label_RightJamb.setText(obj_right.Label)
-        self.ui.label_RightJamb_height.setText(str(get_useful_height(obj_right, self.mode[0])))
+            self.ui.label_objB.setText(f"<<{self.objB.Label}>> longueur")
+            self.bottom_thickness_edit.setText(str(get_useful_height(self.objB, self.mode[0])))
+            self.ui.label_objT.setText(f"<<{self.objT.Label}>> longueur")
+            self.top_thickness_edit.setText(str(get_useful_height(self.objT, self.mode[0])))
+            if self.objL:
+                self.ui.label_LeftJamb.setText(f"<<{self.objL.Label}>> épaisseur")
+                self.ui.label_LeftJamb_height.setText(str(get_useful_height(self.objL, self.mode[0])))
+                self.ui.label_RightJamb.setText(f"<<{self.objR.Label}>> épaisseur")
+                self.ui.label_RightJamb_height.setText(str(get_useful_height(self.objR, self.mode[0])))
 
         # Configurer les connexions
         self.distribution_equidistant_center.toggled.connect(self.update_sliders)
         self.distribution_equidistant_no_thickness.toggled.connect(self.update_sliders)
         self.distribution_arbitrary.toggled.connect(self.update_sliders)
         self.num_shelves_spin.valueChanged.connect(self.update_sliders)
-        self.top_thickness_check.stateChanged.connect(lambda: self.top_thickness_edit.setEnabled(self.top_thickness_check.isChecked()))
-        self.bottom_thickness_check.stateChanged.connect(lambda: self.bottom_thickness_edit.setEnabled(self.bottom_thickness_check.isChecked()))
+        # self.top_thickness_check.stateChanged.connect(lambda: self.top_thickness_edit.setEnabled(self.top_thickness_check.isChecked()))
+        # self.bottom_thickness_check.stateChanged.connect(lambda: self.bottom_thickness_edit.setEnabled(self.bottom_thickness_check.isChecked()))
         self.ui.absolutePosition.toggled.connect(self.update_sliders)
         self.ui.relativePosition.toggled.connect(self.update_sliders)
         self.ui.checkBox_BackProp.toggled.connect(self.backPropToggled)
@@ -342,8 +374,12 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def addShelf(self):
         Gui.Selection.clearSelection()
-        Gui.Selection.addSelection(self.obj1)
-        Gui.Selection.addSelection(self.obj2)
+        if self.mode[0] == "V":
+            Gui.Selection.addSelection(self.objL)
+            Gui.Selection.addSelection(self.objR)
+        else:
+            Gui.Selection.addSelection(self.objB)
+            Gui.Selection.addSelection(self.objT)
         obj = bspfObj()
         part = Add_tab() if self.mode[0] == "V" else Add_mti()
         obj.object = find_additive_box(part)
@@ -419,17 +455,17 @@ class ShelfDialog(QtWidgets.QDialog):
                     obj.object.Visibility = True
             else:
                 obj.temp = True
-        self.obj1.Document.recompute()
+        self.heightObjRef.Document.recompute()
         super().accept()
         self.reject()
 
     def reject(self):
         for obj in self.objects:
             if obj.temp: obj.removeObject()
-        for slider in self.sliders:
-            self.sliders_layout.removeWidget(slider)
-            slider.deleteLater()
-        self.sliders = []
+        # for slider in self.sliders:
+        #     self.sliders_layout.removeWidget(slider)
+        #     slider.deleteLater()
+        # self.sliders = []
         super().reject()
 
 def add_shelves(shelf_positions):

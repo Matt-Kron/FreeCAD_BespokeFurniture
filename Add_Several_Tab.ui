@@ -168,6 +168,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label_objT">
+       <property name="text">
+        <string>Objet haut</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLineEdit" name="topThicknessEdit">
        <property name="text">
         <string>19</string>
@@ -280,6 +287,13 @@
        </property>
        <property name="checked">
         <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_objB">
+       <property name="text">
+        <string>Objet bas</string>
        </property>
       </widget>
      </item>
