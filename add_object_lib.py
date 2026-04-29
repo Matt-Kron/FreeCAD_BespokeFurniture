@@ -14,13 +14,19 @@ PROP_TYPE = 4
 PROP_VALUE_EXP = 5
 PROP_CONTENU = 6
 
+# dftStruct = (
+#                 "Mt i p",
+#                 "Mt i b",
+#                 "Mt i",
+#                 "Mt i r1",
+#                 "Mt i rainure",
+#             )
 dftStruct = (
-                "Mt i p",
-                "Mt i b",
-                "Mt i",
-                "Mt i r1",
-                "Mt i rainure",
-            )
+                    "Tv inf p",
+                    "Tv inf b",
+                    "Tv inf",
+                    "Tv inf rainuree",
+                )
 
 def objName(objLabel = ""):
     if objLabel:
@@ -76,6 +82,7 @@ def updateValueExpression(name, shape, elements_Obj, myDoc):
             if ele[PROP_VALUE_EXP] == "value":
                 if not hasattr(shape, ele[PROP_NAME]):
                     shape.addProperty(ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP])
+                    # msgCsl(f"shape.addProperty(ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP]) {ele[PROP_TYPE], ele[PROP_NAME], ele[PROP_GROUP]}")
                 if ele[PROP_TYPE] == "App::PropertyLinkGlobal":
                     setattr(shape, ele[PROP_NAME], myDoc.getObjectsByLabel(ele[PROP_CONTENU])[0])
                 elif ele[PROP_TYPE] == "App::PropertyEnumeration":
@@ -101,6 +108,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
         if objBaseName in ele[OBJ_NAME]:
             elements_Obj.append(ele)
 
+    # msgCsl(f"elements_Obj {elements_Obj}")
     part = myDoc.addObject('App::Part', objName(objStruct[0])) # "Mt_i_p")
     label = objStruct[0]
     part.Label = label # "Mt i p"
@@ -165,6 +173,14 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
 
         updateValueExpression(name, shape, elements_Obj, myDoc)
 
+    if objBaseName in ("Tv_inf", "Tv_sup", "Mt_g", "Mt_d"):
+        name = objName(objStruct[3]) # "Mt_i_bxr"
+        shape = myDoc.addObject('PartDesign::SubtractiveBox',name)
+        shape.Label = objStruct[3]
+        body.addObject(shape)
+        shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
+        updateValueExpression(name, shape, elements_Obj, myDoc)
+
     name = objName(objStruct[0]) # "Mt_i_p"
     for ele in elements_Obj:
         if ele[OBJ_NAME] == name:
@@ -179,3 +195,6 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
 
     if parentObjLabel != None: myDoc.getObjectsByLabel(parentObjLabel)[0].addObject(part)
     return part
+
+if __name__ == "__main__":
+    addObjectPartBodyBox()

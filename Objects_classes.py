@@ -16,7 +16,9 @@ class bspfObj:
     def getTag(self):
         if self._object:
             # msgCsl(f"Fonction {__name__} {self._object.Label}")
-            self.type, self.caisson, self.group = getObjTag(self._object).values()
+            tag_prop = getObjTag(self._object)
+            if tag_prop:
+                self.type, self.caisson, self.group = tag_prop.values()
 
     def removeObject(self):
         if self.part:

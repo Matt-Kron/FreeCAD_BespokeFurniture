@@ -18,7 +18,7 @@ def Add_TvInf():
     #     Gui.Selection.addSelection(part)
     #     import FreeCAD_BespokeFurniture.MtEntreDeuxTv as MacroVertical
     #     MacroVertical.run_assignment_macro()
-    # return part
+    return part
 
 if __name__ == "__main__":
     Add_TvInf()
