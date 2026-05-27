@@ -122,8 +122,16 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
 
     # nom = "Mt_i"
     if len(objStruct) > 3:
+        follow = False
         if objStruct[3] in ("Porte param", "Tiroir param"):
             label = objStruct[3]
+            follow = True
+        elif len(objStruct) > 4:
+            if objStruct[4] in ("Porte pente G param",):
+                label = objStruct[4]
+                follow = True
+
+        if follow:
             print(f"type {label}")
             name = objName(label)
             shape = myDoc.addObject('App::VarSet',name)
@@ -180,6 +188,16 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
         body.addObject(shape)
         shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
         updateValueExpression(name, shape, elements_Obj, myDoc)
+
+    if objBaseName in ("Porte_pente_G",):
+        name = objName(objStruct[3]) # "Mt_i_bxr"
+        shapeC = myDoc.addObject('PartDesign::SubtractiveBox',name)
+        shapeC.Label = objStruct[3]
+        body.addObject(shapeC)
+        # shapeC.AttachmentSupport.setExpression = "list(tuple(myDoc.getObject(shape).Name._self; tuple(<<Vertex3>>; <<Edge3>>)))"
+        shapeC.setExpression("AttachmentSupport", f"list(tuple({shape.Name}._self; tuple(<<Vertex3>>; <<Edge3>>)))")
+        shapeC.MapMode = 'NormalToEdge'
+        updateValueExpression(name, shapeC, elements_Obj, myDoc)
 
     name = objName(objStruct[0]) # "Mt_i_p"
     for ele in elements_Obj:

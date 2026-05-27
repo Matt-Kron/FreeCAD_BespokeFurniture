@@ -765,7 +765,7 @@ if __name__ == "__main__":
             self.sync_to_varset()
 
     def add_file(self):
-        p, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Calc", "", "Calc (*.ods)")
+        p, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Calc", "", "Calc (*.ods);;All (*.*)")
         if p:
             # On crée un dictionnaire propre pour le fichier
             data = {"type": "file", "path": p}
