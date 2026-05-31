@@ -2,12 +2,13 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from FreeCAD_BespokeFurniture.add_object_lib import addObjectPartBodyBox
 
-def Add_TvInf():
+def Add_mti():
     dftStruct = (
-                    "Tv inf p",
-                    "Tv inf b",
-                    "Tv inf",
-                    "Tv inf rainuree",
+                    "Mt i p",
+                    "Mt i b",
+                    "Mt i",
+                    "Mt i r1",
+                    "Mt i rainuree",
                 )
 
     # sel_obj = Gui.Selection.getSelection()
@@ -21,4 +22,4 @@ def Add_TvInf():
     # return part
 
 if __name__ == "__main__":
-    Add_TvInf()
+    Add_mti()

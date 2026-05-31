@@ -189,7 +189,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
         shape.AttachmentSupport = [(myDoc.getObject(body.Origin.OriginFeatures[0].Name),'')]
         updateValueExpression(name, shape, elements_Obj, myDoc)
 
-    if objBaseName in ("Porte_pente_G",):
+    if objBaseName in ("Porte_pente_G", "Fond_pente_G"):
         name = objName(objStruct[3]) # "Mt_i_bxr"
         shapeC = myDoc.addObject('PartDesign::SubtractiveBox',name)
         shapeC.Label = objStruct[3]
