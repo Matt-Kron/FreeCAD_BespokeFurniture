@@ -143,6 +143,21 @@ class BOM_dialog(QtCore.QObject):
             #msgCsl( "Connecting : " + str(m_key) + " and " + str(m_val) )
             getattr(self.widget, str(m_key)).selectionModel().selectionChanged.connect(getattr(self, str(m_val)))
 
+    def majMasse(self):
+        selindexes = self.widget.BOM_objects_listView.selectedIndexes()
+        volume = 0.0
+        for index in selindexes:
+            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
+            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            if hasattr(obj, "Shape"):
+                volume += obj.Shape.Volume
+        unit = FreeCAD.ActiveDocument.UnitSystem.split("(")[1].split(",")[0]
+        if unit == "mm":
+            volume = volume / 1000 ** 3
+            self.widget.masse_label.setText(f"{volume * self.widget.masseVolumique_spinBox.value():.2f} kg")
+        else:
+            self.widget.masse_label.setText(f"Unité {unit} non prise en compte")
+
     def onClickAutoEdgeBand(self):
         KeyToDefaultEdgeBand = {
                                 "XLength" : ("Avant"),
@@ -357,6 +372,7 @@ class BOM_dialog(QtCore.QObject):
         if self.widget.Edit_pushButton.text() == "Editer <<":
             # msgCsl("lancement de updateEdgeBandCheckBoxFromObj à partir de on_bom_selection_changed")
             self.updateEdgeBandCheckBoxFromObj()
+        self.majMasse()
 
     def objTransparencyBackupRestore(self, mode = "Backup" ):
         if mode == "Backup":
@@ -496,7 +512,7 @@ class BOM_dialog(QtCore.QObject):
             # oline.Placement.move(translation)
             o_parent.addObject(oline)
             oline.Label = "Grain_direction"
-            oline.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=ocolor,AmbientColor=ocolor,SpecularColor=ocolor,EmissiveColor=ocolor,Shininess=(1.0),Transparency=(0.00),))
+            oline.ViewObject.ShapeAppearance = (FreeCAD.Material(DiffuseColor=ocolor,AmbientColor=ocolor,SpecularColor=ocolor,EmissiveColor=ocolor,Shininess=(1.0),Transparency=(0.00),))
             oline.ViewObject.LineColor = ocolor
             oline.ViewObject.PointColor = ocolor
             # oline.ViewObject.Transparency = 50
