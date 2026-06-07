@@ -12,7 +12,7 @@ import FreeCADGui, FreeCAD, Draft
 from PySide import QtCore, QtGui
 # from PySide.QtWidgets import QLineEdit
 sys.path.append(FreeCAD.getUserMacroDir())
-from lib_menuiserie import *
+from FreeCAD_BespokeFurniture.lib_menuiserie import *
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -55,7 +55,7 @@ def preparer_liste_objets_for():
     objets_structures = []
     cles_de_controle = set()
 
-    # 1. Objets locaux
+    # 1. OBRETS LOCAUX (Rang 0)
     for obj in doc_actuel.Objects:
         if hasattr(obj, "BOM_destination"):
             if obj.Name not in cles_de_controle:
@@ -66,23 +66,50 @@ def preparer_liste_objets_for():
                     "parent_label": ""  # Pas de parent externe
                 })
 
-    # 2. Objets externes
+    # Fonction d'aide pour remonter l'arborescence interne d'un fichier externe
+    def reconstruire_chemin_interne(obj_ext, doc_externe):
+        """Remonte les parents dans le doc externe pour créer la chaîne de noms (ex: ['Part', 'Part017', 'Body', 'Box'])"""
+        chemin = [obj_ext.Name]
+        courant = obj_ext
+        # On remonte tant qu'on trouve un parent dans le même document externe
+        while hasattr(courant, "InList") and courant.InList:
+            parent = None
+            for p in courant.InList:
+                # On cherche un parent physique de type conteneur (Part, Body, Group) dans le même document
+                if p.Document == doc_externe and ("Part" in p.TypeId or "Group" in p.TypeId or "Body" in p.TypeId):
+                    parent = p
+                    break
+            if parent:
+                chemin.insert(0, parent.Name)
+                courant = parent
+            else:
+                break
+        return chemin
+
+    # 2. ANALYSE DES DOCUMENTS EXTERNES VIA LEUR CATALOGUE .OBJECTS
     for lnk in doc_actuel.Objects:
         if hasattr(lnk, "LinkedObject") and lnk.LinkedObject:
             doc_externe = lnk.LinkedObject.Document
+
             if doc_externe != doc_actuel:
+                # On parcourt à plat tous les objets du document externe
                 for obj_ext in doc_externe.Objects:
+
                     if hasattr(obj_ext, "BOM_destination"):
-                        cle = f"{lnk.Name}.{obj_ext.Name}"
-                        if cle not in cles_de_controle:
-                            cles_de_controle.add(cle)
+                        # Reconstruction du chemin hiérarchique complet au sein du doc externe
+                        chemin_noms = reconstruire_chemin_interne(obj_ext, doc_externe)
 
-                            sub_obj = lnk.getSubObject(f"{obj_ext.Name}.")
-                            obj_ref = sub_obj if sub_obj else obj_ext
+                        # Construction du nom composé complet à partir du document actif
+                        # Exemple : "Link004.Part.Part017.Body.Box"
+                        cle_complete = f"{lnk.Name}.{'.'.join(chemin_noms)}"
 
+                        if cle_complete not in cles_de_controle:
+                            cles_de_controle.add(cle_complete)
+
+                            # On stocke directement LE VRAI OBJET COMPLET du document externe
                             objets_structures.append({
-                                "obj_reference": obj_ref,
-                                "nom_unique": cle,  # Garde la syntaxe "Lien.Objet" pour sélection
+                                "obj_reference": obj_ext,
+                                "nom_unique": cle_complete,
                                 "parent_label": lnk.Label  # Label du conteneur (ex: "tiroir pente 2")
                             })
 
@@ -187,29 +214,29 @@ class BOM_dialog(QtCore.QObject):
 
         self.widget.masseVolumique_spinBox.valueChanged.connect(self.majMasse)
 
-    def getObjFromListViewItem(self, item):
+    def getObjFromListViewItem(self, nom_unique):
         mon_objet = None
-        nom_unique = item.data(QtCore.Qt.UserRole)
+        # nom_unique = item.data(QtCore.Qt.UserRole)
         if "." in nom_unique:
             # CAS EXTERNE : L'adresse est sous la forme "NomDuLien.NomDeLObjet"
             nom_lien, nom_sous_obj = nom_unique.split(".", 1)
 
-            lien_local = doc.getObject(nom_lien)
+            lien_local = FreeCAD.ActiveDocument.getObject(nom_lien)
             if lien_local:
                 # On utilise getSubObject pour obtenir l'objet virtuel lié
-                mon_objet = lien_local.getSubObject(f"{nom_sous_obj}.")
-                msgCsl(f"Objet lié:{nom_sous_obj} - {mon_objet.Label}, lien local: {nom_lien}")
+                mon_objet = lien_local.LinkedObject.Document.getObject(nom_sous_obj.split(".")[-1])
+                # msgCsl(f"Objet lié:{mon_objet.Label} , lien local: {nom_lien}")
         else:
             # CAS LOCAL : L'objet est directement dans le document actif
-            mon_objet = doc.getObject(nom_unique)
+            mon_objet = FreeCAD.ActiveDocument.getObject(nom_unique)
         return mon_objet
 
     def majMasse(self):
         selindexes = self.widget.BOM_objects_listView.selectedIndexes()
         volume = 0.0
         for index in selindexes:
-            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            item = self.my_model.itemFromIndex(index)
+            obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
             if hasattr(obj, "Shape"):
                 volume += obj.Shape.Volume
         unit = FreeCAD.ActiveDocument.UnitSystem.split("(")[1].split(",")[0]
@@ -219,7 +246,7 @@ class BOM_dialog(QtCore.QObject):
         else:
             self.widget.masse_label.setText(f"Unité {unit} non prise en compte")
 
-def onClickAutoEdgeBand(self):
+    def onClickAutoEdgeBand(self):
         KeyToDefaultEdgeBand = {
                                 "XLength" : ("Avant"),
                                 "YLength" : ("Avant", "Arriere", "Gauche", "Droit"),
@@ -421,7 +448,8 @@ def onClickAutoEdgeBand(self):
             selection_model.clearSelection()
             for i in range(self.my_model.rowCount()):
                 item = self.my_model.item(i) # Récupère l'objet QStandardItem 
-                obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
                 if material == obj.BOM_mat:
                     selection_model.select(self.my_model.index(i, 0), 
                                 QtCore.QItemSelectionModel.Select)
@@ -440,17 +468,17 @@ def onClickAutoEdgeBand(self):
             for i in range(self.my_model.rowCount()):   #self.widget.BOM_objects_listView.model()
                 # item = self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
                 item = self.my_model.item(i)
-                msgCsl(f"text listview: {i} - {item.text()}")
-                obj = self.getObjFromListViewItem(item)
-                msgCsl(f"obj: {obj.Label if obj else "None"}")
+                # msgCsl(f"text listview: {i} - {item.text()}")
+                obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
+                # msgCsl(f"objTransparencyBackupRestore obj: {obj}")
                 viewer_container = getParentViewObject(obj) #FreeCAD.ActiveDocument.getObjectsByLabel(item.text())[0])
-                if self.obj_transparency.get(obj.Label) == None:
+                if self.obj_transparency.get(item.data(QtCore.Qt.UserRole)) == None:
                     # msgCsl(f"self.obj_transparency.get(item.text()) {self.obj_transparency.get(item.text())}")
-                    self.obj_transparency[item.text()] = viewer_container.ViewObject.Transparency
+                    self.obj_transparency[item.data(QtCore.Qt.UserRole)] = viewer_container.ViewObject.Transparency
         elif mode == "Restore":
             for key, value in self.obj_transparency.items():
-                obj = self.getObjFromListViewItem()
-                viewer_container = getParentViewObject(FreeCAD.ActiveDocument.getObjectsByLabel(key)[0])
+                obj = self.getObjFromListViewItem(key)
+                viewer_container = getParentViewObject(obj)
                 viewer_container.ViewObject.Transparency = value
 
     def setUnSelectedObjectTransparent(self):
@@ -458,15 +486,17 @@ def onClickAutoEdgeBand(self):
             selindexes = self.widget.BOM_objects_listView.selectedIndexes()
     
             for i in range(self.widget.BOM_objects_listView.model().rowCount()):
-                item = self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
-                obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                item = self.my_model.item(i) #self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
+                # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
                 viewer_container = getParentViewObject(obj)
                 if not item.index() in selindexes:
                     viewer_container.ViewObject.Transparency = 90
-                    if self.edgeband_objs.get(obj.Label):
+                    key = f"<{obj.Document.Name}>{obj.Label}"
+                    if self.edgeband_objs.get(key):
                         for edgeband in EDGEBAND_PROPERTIES.values():
-                            if self.edgeband_objs[obj.Label].get(edgeband["Name"]):
-                                self.edgeband_objs[obj.Label][edgeband["Name"]].Visibility = False
+                            if self.edgeband_objs[key].get(edgeband["Name"]):
+                                self.edgeband_objs[key][edgeband["Name"]].Visibility = False
                 else:
                     viewer_container.ViewObject.Transparency = 0
         else:
@@ -494,7 +524,7 @@ def onClickAutoEdgeBand(self):
         # For objects which aren't anymore in ListView, corresponding grain_obj has to be deleted'
         obj_labels = []
         for ob in self.objects:
-            obj_labels.append(FreeCAD.ActiveDocument.getObject(ob[1]).Label)
+            obj_labels.append(ob[1])
         for key in self.grain_objs:
             # msgCsl(f"obj_labels {obj_labels}")
             # msgCsl(f"grain_objs {self.grain_objs}")
@@ -506,25 +536,28 @@ def onClickAutoEdgeBand(self):
         # grain_obj of non-selected objects are hidden, those existing and selected are shown, other created
         # if selindexes:
         for i in range(self.widget.BOM_objects_listView.model().rowCount()):
-            item = self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
+            item = self.my_model.item(i) # Récupère l'objet QStandardItem
             if not item.index() in selindexes:
                 # item = self.widget.BOM_objects_listView.model().itemFromIndex(i)
-                obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
-                if self.grain_objs.get(obj.Label):
-                    self.grain_objs[obj.Label].Visibility = False
+                ext_label = item.data(QtCore.Qt.UserRole)
+                # obj = self.getObjFromListViewItem(ext_label) #FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                if self.grain_objs.get(ext_label):
+                    self.grain_objs[ext_label].Visibility = False
         for index in selindexes:
-            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            item = self.my_model.item(index)
+            ext_label = item.data(QtCore.Qt.UserRole)
+            obj = self.getObjFromListViewItem(ext_label)
             # msgCsl(f"obj wood grain: {obj.Label}")
             try:
-                self.grain_objs[obj.Label].Visibility = True and self.widget.WoodGrainDisplay_checkBox.isChecked()
+                self.grain_objs[ext_label].Visibility = True and self.widget.WoodGrainDisplay_checkBox.isChecked()
             except:
                 f_recompute = self.createGrainObj(obj)
         if f_recompute: FreeCAD.ActiveDocument.recompute()
                     
     def removeGrainObj(self, grain_obj_label):
         try:
-            FreeCAD.ActiveDocument.removeObject(self.grain_objs[grain_obj_label].Name)
+            obj = self.getObjFromListViewItem(grain_obj_label)
+            obj.Document.removeObject(self.grain_objs[grain_obj_label].Name)
             self.grain_objs.pop(grain_obj_label)
         except:
             pass
@@ -642,10 +675,20 @@ def onClickAutoEdgeBand(self):
         self.setUnSelectedObjectTransparent()
         FreeCADGui.Selection.clearSelection()
         for index in self.widget.BOM_objects_listView.selectedIndexes():
-            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            # item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
+            # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
             # msgCsl(f"selected row {item.row()}, data {item.text()}, self.objects : index {self.objects[item.row()][0]}, name {self.objects[item.row()][1]}")
-            FreeCADGui.Selection.addSelection(obj)
+            # FreeCADGui.Selection.addSelection(obj)
+            item = self.my_model.itemFromIndex(index)
+            ext_label = item.data(QtCore.Qt.UserRole)
+            names = ext_label.split(".")
+            obj_name = names[0]
+            if len(names) > 1:
+                subobj = ".".join(names[1:]) + "."
+                # msgCsl(f"onSelectFreeCAD_clicked: {FreeCAD.ActiveDocument.Name} - {obj_name} -> {subobj}")
+                FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name, subobj)
+            else:
+                FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name)
 
     def setBOMtoTrue(self):
         for index in self.widget.BOM_objects_listView.selectedIndexes():
@@ -685,7 +728,11 @@ def onClickAutoEdgeBand(self):
                     })
 
         for item_struct in objets_bom:
-            obj = item_struct["obj_reference"]
+            if item_struct["parent_label"] == "":
+                obj = item_struct["obj_reference"]
+            else:
+                doc = FreeCAD.ActiveDocument.getObjectsByLabel(item_struct["parent_label"])[0].LinkedObject.Document
+                obj = doc.getObject(item_struct["nom_unique"].split(".")[-1])
             add_obj = False
 
             # Filtres d'exclusion / inclusion basés sur le Label d'origine de l'objet
@@ -731,8 +778,8 @@ def onClickAutoEdgeBand(self):
 
         for i in range(self.my_model.rowCount()):
             item = self.my_model.item(i)
-            msgCsl(f"nom dans le model : {item.text()} - {item.data(QtCore.Qt.UserRole)}")
-            msgCsl(f"self.objects: {i} - {self.objects[i][1]}")
+            # msgCsl(f"nom dans le model : {item.text()} - {item.data(QtCore.Qt.UserRole)}")
+            # msgCsl(f"self.objects: {i} - {self.objects[i][1]}")
         self.BOM_materials_list_update()
         self.objTransparencyBackupRestore("Backup")
         self.setUnSelectedObjectTransparent()
@@ -743,7 +790,7 @@ def onClickAutoEdgeBand(self):
         if self.objects:
             mat_list = []
             for obj in self.objects:
-                oFC = FreeCAD.ActiveDocument.getObject(obj[1])
+                oFC = self.getObjFromListViewItem(obj[1])
 #                userMsg(f"objet étiquette {oFC.Label}")
                 if hasattr(oFC,"BOM_mat"):
                     mat = oFC.BOM_mat

@@ -121,18 +121,34 @@ def find_additive_box(parent_obj):
 
 def getParentViewObject(oFC):
     viewObj = None
+    # ext_obj = False
+    # if isinstance(oFC, tuple):
+    #     doc, _obj = oFC
+    #     msgCsl(f"getParentViewObject doc: {doc.Name}")
+    #     msgCsl(f"getParentViewObject _obj: {_obj} - {_obj.split(".")[-1]}")
+    #     _oFC = doc.getObject(_obj.split(".")[-1])
+    #     msgCsl(f"getParentViewObject _oFC: {_oFC} {_oFC.Label} {_oFC.TypeId}")
+    #     ext_obj = True
+    # else:
+    #     doc =App.ActiveDocument
+    #     _oFC = oFC
     if "PartDesign::" in oFC.TypeId:
-        Gui.Selection.clearSelection()
-        Gui.Selection.addSelection(oFC)
-        sels = Gui.Selection.getSelectionEx("", 0)
-        sel = sels[0]
-        sub = sel.SubElementNames[0] if sel.SubElementNames else ""
-        subs = sub.split(".")[:-1]
-        # msgCsl(f"Object {oFC.Label} Body name: {subs[-2]}")
-        viewObj = App.ActiveDocument.getObject(subs[-2])
-        Gui.Selection.clearSelection()
+        if hasattr(oFC, "_Body"):
+            viewObj = oFC._Body
+        # if ext_obj:
+        #     viewObj = oFC #doc.getObject(oFC[1].split(".")[-2])
+        # else:
+        #     Gui.Selection.clearSelection()
+        #     Gui.Selection.addSelection(oFC)
+        #     sels = Gui.Selection.getSelectionEx("", 0)
+        #     sel = sels[0]
+        #     sub = sel.SubElementNames[0] if sel.SubElementNames else ""
+        #     subs = sub.split(".")[:-1]
+        #     # msgCsl(f"Object {_oFC.Label} Body name: {subs[-2]}")
+        #     viewObj = doc.getObject(subs[-2])
+        #     Gui.Selection.clearSelection()
     if "Part::" in oFC.TypeId:
-        viewObj = App.ActiveDocument.getObject(oFC.Name)
+        viewObj = oFC
     return viewObj
 
 def getCurrentWoodPanel():
