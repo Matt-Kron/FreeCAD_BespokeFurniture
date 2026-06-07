@@ -19,13 +19,6 @@
    </property>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="excludeFilter_lineEdit">
-       <property name="clearButtonEnabled">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="includeFilter_lineEdit">
        <property name="clearButtonEnabled">
@@ -40,10 +33,41 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Exclude filter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="excludeFilter_update_pushButton">
+       <property name="text">
+        <string>Update lists</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="2">
       <widget class="QPushButton" name="resetFilter_pushButton">
        <property name="text">
         <string>Reset filter</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="excludeFilter_lineEdit">
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="linkObjects_checkBox">
+       <property name="text">
+        <string>Inclure les objets externes</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
