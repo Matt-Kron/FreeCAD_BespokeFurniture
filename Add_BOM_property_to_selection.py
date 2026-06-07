@@ -30,7 +30,6 @@ DEFAULT_PANELS_LIST = (
 DEFAULT_MAT = 0
 
 print('Add BOM property')
-obj = FreeCADGui.Selection.getSelection()
 
 def hex_to_rgb(value):
     value = value.lstrip('#')
@@ -355,7 +354,6 @@ class Panneaux:
         else:
             print(f"Couleurs, Aucun objet avec la propriété 'BOM_mat' correspondant à un panneau n'a été trouvé ou mis à jour.")
 
-
 Panx = Panneaux()
 
 doc_obj = Panx._get_doc_object()
@@ -369,9 +367,11 @@ WOOD_MATERIALS = []
 for panel in Panx.doc_panneaux:
     WOOD_MATERIALS.append(panel.nom_aggr)
 
-if len(obj)!=0:
-   print('nombre objets: ', len(obj))
-   for o in obj:
+objs = FreeCADGui.Selection.getSelection()
+
+if len(objs)!=0:
+   print('nombre objets: ', len(objs))
+   for o in objs:
       if hasattr(o,"Shape"): # and obj.Shape.Solids:
 #         print('object has shape')
          for prop in USER_PROPERTIES:

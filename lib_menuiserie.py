@@ -245,3 +245,44 @@ def setObjTag(obj, typ = None, caisson = None, groupe_etageres = None):
                     "groupe_etageres" : groupe_etageres if groupe_etageres != None else tag_prop["groupe_etageres"],
                 }
     obj.bspf_tag = ";".join(tag_prop.values())
+
+
+def get_recursively_objects(doc, visited_objects=None):
+    """
+    Récupère tous les objets avec une Shape, y compris ceux des conteneurs récursifs,
+    tout en évitant les boucles infinies via un suivi des objets visités.
+    """
+    if visited_objects is None:
+        visited_objects = set()
+
+    shaped_objects = []
+
+    for obj in doc.Objects:
+        # Évite de traiter l'objet s'il a déjà été vu (STOPPER LA RÉCURSION EN CAS DE BOUCLE)
+        if obj in visited_objects:
+            continue
+
+        visited_objects.add(obj)
+
+        # # 1. Traitement des objets avec une Shape
+        # if hasattr(obj, "Shape"):
+        #     shaped_objects.append(obj)
+
+        # 2. Récursion dans les conteneurs
+        if hasattr(obj, "OutListRecursive"):
+            # Passer le set des objets visités aux appels récursifs
+            shaped_objects.extend(get_recursively_shaped_objects(obj.OutListRecursive, visited_objects))
+
+    return shaped_objects
+
+def get_objects_with_attributs(objects_list, attribut_list):
+    objects_with_attributs = []
+    for obj in objects_list:
+        attributs_checked = True
+        for attribut in attribut_list:
+            if not hasattr(obj, attribut):
+                attributs_checked = False
+                break
+        if attributs_checked:
+            objects_with_attributs.append(obj)
+    return objects_with_attributs
