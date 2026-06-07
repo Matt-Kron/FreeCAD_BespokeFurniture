@@ -46,6 +46,48 @@ PROP_LIST = ("Nesting",
              "BOM_mat",
              "BOM_quantity" )
 
+
+def preparer_liste_objets_for():
+    doc_actuel = FreeCAD.ActiveDocument
+    if not doc_actuel:
+        return []
+
+    objets_structures = []
+    cles_de_controle = set()
+
+    # 1. Objets locaux
+    for obj in doc_actuel.Objects:
+        if hasattr(obj, "BOM_destination"):
+            if obj.Name not in cles_de_controle:
+                cles_de_controle.add(obj.Name)
+                objets_structures.append({
+                    "obj_reference": obj,
+                    "nom_unique": obj.Name,
+                    "parent_label": ""  # Pas de parent externe
+                })
+
+    # 2. Objets externes
+    for lnk in doc_actuel.Objects:
+        if hasattr(lnk, "LinkedObject") and lnk.LinkedObject:
+            doc_externe = lnk.LinkedObject.Document
+            if doc_externe != doc_actuel:
+                for obj_ext in doc_externe.Objects:
+                    if hasattr(obj_ext, "BOM_destination"):
+                        cle = f"{lnk.Name}.{obj_ext.Name}"
+                        if cle not in cles_de_controle:
+                            cles_de_controle.add(cle)
+
+                            sub_obj = lnk.getSubObject(f"{obj_ext.Name}.")
+                            obj_ref = sub_obj if sub_obj else obj_ext
+
+                            objets_structures.append({
+                                "obj_reference": obj_ref,
+                                "nom_unique": cle,  # Garde la syntaxe "Lien.Objet" pour sélection
+                                "parent_label": lnk.Label  # Label du conteneur (ex: "tiroir pente 2")
+                            })
+
+    return objets_structures
+
 class bom_obj():
     def __init__(self, fcObj = None):
         self.fcObj
@@ -142,6 +184,37 @@ class BOM_dialog(QtCore.QObject):
         for m_key, m_val in self.connections_for_listView_selectionChanged.items():
             #msgCsl( "Connecting : " + str(m_key) + " and " + str(m_val) )
             getattr(self.widget, str(m_key)).selectionModel().selectionChanged.connect(getattr(self, str(m_val)))
+
+        self.widget.masseVolumique_spinBox.valueChanged.connect(self.majMasse)
+
+    def getObjFromListViewItem(self, item):
+        mon_objet = None
+        nom_unique = item.data(QtCore.Qt.UserRole)
+        if "." in nom_unique:
+            # CAS EXTERNE : L'adresse est sous la forme "NomDuLien.NomDeLObjet"
+            nom_lien, nom_sous_obj = nom_unique.split(".", 1)
+
+            lien_local = doc.getObject(nom_lien)
+            if lien_local:
+                # On utilise getSubObject pour obtenir l'objet virtuel lié
+                mon_objet = lien_local.getSubObject(f"{nom_sous_obj}.")
+                msgCsl(f"Objet lié:{nom_sous_obj} - {mon_objet.Label}, lien local: {nom_lien}")
+        else:
+            # CAS LOCAL : L'objet est directement dans le document actif
+            mon_objet = doc.getObject(nom_unique)
+        return mon_objet
+
+    def majMasse(self):
+        selindexes = self.widget.BOM_objects_listView.selectedIndexes()
+        volume = 0.0
+        for index in selindexes:
+            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
+            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            if hasattr(obj, "Shape"):
+                volume += obj.Shape.Volume
+        if FreeCAD.ActiveDocument.UnitSystem.split("(")[1].split(",")[0] == "mm":
+            volume = volume / 1000**3
+            self.widget.masse_label.setText(f"{volume * self.widget.masseVolumique_spinBox.value():.2f} kg")
 
     def onClickAutoEdgeBand(self):
         KeyToDefaultEdgeBand = {
@@ -357,17 +430,23 @@ class BOM_dialog(QtCore.QObject):
         if self.widget.Edit_pushButton.text() == "Editer <<":
             # msgCsl("lancement de updateEdgeBandCheckBoxFromObj à partir de on_bom_selection_changed")
             self.updateEdgeBandCheckBoxFromObj()
+        self.majMasse()
 
     def objTransparencyBackupRestore(self, mode = "Backup" ):
         if mode == "Backup":
             for i in range(self.my_model.rowCount()):   #self.widget.BOM_objects_listView.model()
-                item = self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
-                viewer_container = getParentViewObject(FreeCAD.ActiveDocument.getObjectsByLabel(item.text())[0])
-                if self.obj_transparency.get(item.text()) == None:
+                # item = self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
+                item = self.my_model.item(i)
+                msgCsl(f"text listview: {i} - {item.text()}")
+                obj = self.getObjFromListViewItem(item)
+                msgCsl(f"obj: {obj.Label if obj else "None"}")
+                viewer_container = getParentViewObject(obj) #FreeCAD.ActiveDocument.getObjectsByLabel(item.text())[0])
+                if self.obj_transparency.get(obj.Label) == None:
                     # msgCsl(f"self.obj_transparency.get(item.text()) {self.obj_transparency.get(item.text())}")
                     self.obj_transparency[item.text()] = viewer_container.ViewObject.Transparency
         elif mode == "Restore":
             for key, value in self.obj_transparency.items():
+                obj = self.getObjFromListViewItem()
                 viewer_container = getParentViewObject(FreeCAD.ActiveDocument.getObjectsByLabel(key)[0])
                 viewer_container.ViewObject.Transparency = value
 
@@ -496,7 +575,7 @@ class BOM_dialog(QtCore.QObject):
             # oline.Placement.move(translation)
             o_parent.addObject(oline)
             oline.Label = "Grain_direction"
-            oline.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=ocolor,AmbientColor=ocolor,SpecularColor=ocolor,EmissiveColor=ocolor,Shininess=(1.0),Transparency=(0.00),))
+            oline.ViewObject.ShapeAppearance = (FreeCAD.Material(DiffuseColor=ocolor,AmbientColor=ocolor,SpecularColor=ocolor,EmissiveColor=ocolor,Shininess=(1.0),Transparency=(0.00),))
             oline.ViewObject.LineColor = ocolor
             oline.ViewObject.PointColor = ocolor
             # oline.ViewObject.Transparency = 50
@@ -584,43 +663,73 @@ class BOM_dialog(QtCore.QObject):
         self.widget.includeFilter_lineEdit.setText("")
 
     def BOM_objects_List_update(self):
-        # self.widget.Parts_listView.clear()
-        # self.clear_ListView(self.widget.Parts_listView)
-        # Model = QtGui.QStandardItemModel(self.widget.BOM_objects_listView)
-        # Model.clear()
         self.my_model.clear()
-        # msgCsl(f"BOM_objects_List_update start {Model.rowCount()}")
-        list_obj = []
         self.objects = []
         i = 0
-        for obj in FreeCAD.ActiveDocument.Objects:
+
+        # On prépare une structure uniforme pour les objets locaux
+        objets_bom = []
+        if self.widget.linkObjects_checkBox.isChecked():
+            objets_bom = preparer_liste_objets_for()
+        else:
+            # Si décoché, on recrée la même structure de dictionnaire pour le local
+            for obj in FreeCAD.ActiveDocument.Objects:
+                if hasattr(obj, "BOM_destination"):
+                    objets_bom.append({
+                        "obj_reference": obj,
+                        "nom_unique": obj.Name,
+                        "parent_label": ""
+                    })
+
+        for item_struct in objets_bom:
+            obj = item_struct["obj_reference"]
             add_obj = False
-            if hasattr(obj,"BOM_destination"):
-                if self.widget.excludeFilter_lineEdit.text():
-                    if not self.widget.excludeFilter_lineEdit.text() in obj.Label.lower():
-                        add_obj = True
-                else:
+
+            # Filtres d'exclusion / inclusion basés sur le Label d'origine de l'objet
+            if self.widget.excludeFilter_lineEdit.text():
+                if not self.widget.excludeFilter_lineEdit.text() in obj.Label.lower():
                     add_obj = True
-                if add_obj and self.widget.includeFilter_lineEdit.text():
-                    if not self.widget.includeFilter_lineEdit.text() in obj.Label.lower():
-                        add_obj = False
-                if add_obj:
-                    match [self.widget.BOM_True_checkBox.isChecked(), self.widget.BOM_False_checkBox.isChecked()]:
-                        case [True, False]:
-                            add_obj =  obj.BOM_destination
-                        case [False, True]:
-                            add_obj = not obj.BOM_destination
+            else:
+                add_obj = True
+
+            if add_obj and self.widget.includeFilter_lineEdit.text():
+                if not self.widget.includeFilter_lineEdit.text() in obj.Label.lower():
+                    add_obj = False
+
             if add_obj:
-                list_obj.append(obj.Label)
-                self.objects.append([i, obj.Name])
+                match [self.widget.BOM_True_checkBox.isChecked(), self.widget.BOM_False_checkBox.isChecked()]:
+                    case [True, False]:
+                        add_obj = obj.BOM_destination
+                    case [False, True]:
+                        add_obj = not obj.BOM_destination
+
+            if add_obj:
+                # Formatage du texte affiché dans la ListView
+                if item_struct["parent_label"]:
+                    label_affichage = f"<{item_struct['parent_label']}> {obj.Label}"
+                else:
+                    label_affichage = obj.Label
+
+                # Création de l'item de liste Qt
+                listitem = QtGui.QStandardItem(label_affichage)
+
+                # SÉCURITÉ : On stocke le nom interne unique (ex: 'Link004.Box002') TRÈS IMPORTANT pour la sélection future
+                listitem.setData(item_struct["nom_unique"], QtCore.Qt.UserRole)
+
+                # Gestion de l'icône directement via l'objet référencé (marche en local et en externe)
+                if hasattr(obj, "ViewObject") and obj.ViewObject and hasattr(obj.ViewObject, "Icon"):
+                    listitem.setData(obj.ViewObject.Icon, QtCore.Qt.DecorationRole)
+
+                self.my_model.appendRow(listitem)
+
+                # self.objects suit la structure [index, NomUnique]
+                self.objects.append([i, item_struct["nom_unique"]])
                 i += 1
-        for item in list_obj:
-            listitem = QtGui.QStandardItem(item)
-            self.my_model.appendRow(listitem)
-            # listitem.setData(QtGui.QIcon(os.path.join(iconPath, 'Geofeaturegroup.svg')),QtCore.Qt.DecorationRole)
-            listitem.setData(FreeCAD.ActiveDocument.getObjectsByLabel(item)[0].ViewObject.Icon,QtCore.Qt.DecorationRole)
-        # msgCsl(f"BOM_objects_List_update end {self.my_model.rowCount()}")
-        # self.widget.BOM_objects_listView.setModel(Model)
+
+        for i in range(self.my_model.rowCount()):
+            item = self.my_model.item(i)
+            msgCsl(f"nom dans le model : {item.text()} - {item.data(QtCore.Qt.UserRole)}")
+            msgCsl(f"self.objects: {i} - {self.objects[i][1]}")
         self.BOM_materials_list_update()
         self.objTransparencyBackupRestore("Backup")
         self.setUnSelectedObjectTransparent()
