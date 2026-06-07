@@ -212,11 +212,14 @@ class BOM_dialog(QtCore.QObject):
             obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
             if hasattr(obj, "Shape"):
                 volume += obj.Shape.Volume
-        if FreeCAD.ActiveDocument.UnitSystem.split("(")[1].split(",")[0] == "mm":
-            volume = volume / 1000**3
+        unit = FreeCAD.ActiveDocument.UnitSystem.split("(")[1].split(",")[0]
+        if unit == "mm":
+            volume = volume / 1000 ** 3
             self.widget.masse_label.setText(f"{volume * self.widget.masseVolumique_spinBox.value():.2f} kg")
+        else:
+            self.widget.masse_label.setText(f"Unité {unit} non prise en compte")
 
-    def onClickAutoEdgeBand(self):
+def onClickAutoEdgeBand(self):
         KeyToDefaultEdgeBand = {
                                 "XLength" : ("Avant"),
                                 "YLength" : ("Avant", "Arriere", "Gauche", "Droit"),
