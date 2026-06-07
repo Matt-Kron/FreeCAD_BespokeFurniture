@@ -140,6 +140,7 @@ class BOM_dialog(QtCore.QObject):
         self.widget.BOM_objects_listView.setModel(self.my_model)
         self.materials_model = QtGui.QStandardItemModel()
         self.widget.material_listView.setModel(self.materials_model)
+        self.widget.linkObjects_checkBox.setChecked(True)
         self.BOM_objects_List_update()
         self.BOM_materials_list_update()
         self.h_separator = QtGui.QFrame()
@@ -186,6 +187,7 @@ class BOM_dialog(QtCore.QObject):
                                                       "RightEdgeBand_checkBox"   : "onClickRightEdgeBandCheckChanged",
                                                       "FrontEdgeBand_checkBox"   : "onClickFrontEdgeBandCheckChanged",
                                                       "RearEdgeBand_checkBox"    : "onClickRearEdgeBandCheckChanged",
+                                                      "linkObjects_checkBox"     : "BOM_objects_List_update",
                                                       }
         self.connections_for_lineEdit_textChanged = {
                                                     "excludeFilter_lineEdit"        : "BOM_objects_List_update",
@@ -450,6 +452,7 @@ class BOM_dialog(QtCore.QObject):
                 item = self.my_model.item(i) # Récupère l'objet QStandardItem 
                 # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
                 obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
+                # msgCsl(f"onMaterialSelectionChanged: item.data {item.data(QtCore.Qt.UserRole)} - {obj.Label}")
                 if material == obj.BOM_mat:
                     selection_model.select(self.my_model.index(i, 0), 
                                 QtCore.QItemSelectionModel.Select)
@@ -525,7 +528,7 @@ class BOM_dialog(QtCore.QObject):
         obj_labels = []
         for ob in self.objects:
             obj_labels.append(ob[1])
-        for key in self.grain_objs:
+        for key in self.grain_objs.keys():
             # msgCsl(f"obj_labels {obj_labels}")
             # msgCsl(f"grain_objs {self.grain_objs}")
             if not key in obj_labels:
@@ -544,14 +547,14 @@ class BOM_dialog(QtCore.QObject):
                 if self.grain_objs.get(ext_label):
                     self.grain_objs[ext_label].Visibility = False
         for index in selindexes:
-            item = self.my_model.item(index)
+            item = self.my_model.itemFromIndex(index)
             ext_label = item.data(QtCore.Qt.UserRole)
-            obj = self.getObjFromListViewItem(ext_label)
+            # obj = self.getObjFromListViewItem(ext_label)
             # msgCsl(f"obj wood grain: {obj.Label}")
             try:
                 self.grain_objs[ext_label].Visibility = True and self.widget.WoodGrainDisplay_checkBox.isChecked()
             except:
-                f_recompute = self.createGrainObj(obj)
+                f_recompute = self.createGrainObj(ext_label)
         if f_recompute: FreeCAD.ActiveDocument.recompute()
                     
     def removeGrainObj(self, grain_obj_label):
@@ -562,18 +565,19 @@ class BOM_dialog(QtCore.QObject):
         except:
             pass
                 
-    def createGrainObj(self, obj):
+    def createGrainObj(self, ext_label):
         GRAIN_OBJ_OFFSET = 40
         GRAIN_OBJ_THICKNESS = 19
         f_recompute = False
+        obj = self.getObjFromListViewItem(ext_label)
         if hasattr(obj, "Nest_grain"):
-            parent_obj = get_parent_part(obj)
+            # parent_obj = get_parent_part(obj)
             x_length = obj.Shape.BoundBox.XLength
             y_length = obj.Shape.BoundBox.YLength
             z_length = obj.Shape.BoundBox.ZLength
             o_parent = get_parent_part(obj)
             msgCsl(f"createGrainObj parent = {o_parent.Label}")
-            pl = o_parent.Placement
+            # pl = o_parent.Placement
             try:
                 if not "PartDesign" in obj.TypeId:
                     pl_obj = obj.Placement
@@ -600,7 +604,20 @@ class BOM_dialog(QtCore.QObject):
                 points = [FreeCAD.Vector(0.0, 0.0, 0.0), FreeCAD.Vector(0.0,0.0, z_length), FreeCAD.Vector(GRAIN_OBJ_THICKNESS, 0.0, z_length), FreeCAD.Vector(GRAIN_OBJ_THICKNESS, 0.0, 0.0)]
                 ocolor = (0, 0, 255)
 
+            activedoc = FreeCAD.ActiveDocument
+            targetdoc = activedoc.getObject(ext_label.split(".")[0]).LinkedObject.Document
+            # msgCsl(f"targetdoc {targetdoc.Name}")
+            FreeCAD.setActiveDocument(targetdoc.Name)
+            # FreeCAD.ActiveDocument = FreeCAD.getDocument(targetdoc.Name)
+            # FreeCADGui.setActiveDocument(targetdoc.Name)
+            # FreeCADGui.ActiveDocument = FreeCADGui.getDocument(targetdoc.Name)
             oline = Draft.make_wire(points, placement=FreeCAD.Placement(), closed=True, face=True, support=None)
+            FreeCADGui.Selection.clearSelection()
+            # msgCsl(f"activedoc {activedoc.Name}")
+            FreeCAD.setActiveDocument(activedoc.Name)
+            # FreeCAD.ActiveDocument = FreeCAD.getDocument(activedoc.Name)
+            # FreeCADGui.setActiveDocument(activedoc.Name)
+            # FreeCADGui.ActiveDocument = FreeCADGui.getDocument(activedoc.Name)
             # pl_res = pl_body.multiply(pl)
             # msgCsl(f"pl_body.multiply(pl) {pl_res}")
             pl_res = pl_obj.multiply(pl_body)
@@ -616,7 +633,8 @@ class BOM_dialog(QtCore.QObject):
             oline.ViewObject.PointColor = ocolor
             # oline.ViewObject.Transparency = 50
             oline.ViewObject.LineWidth = 0.01
-            self.grain_objs[obj.Label] = oline
+            # key = f"<{obj.Document.Name}>{obj.Label}"
+            self.grain_objs[ext_label] = oline
             f_recompute = True
         return f_recompute
 
@@ -634,13 +652,23 @@ class BOM_dialog(QtCore.QObject):
             material = current_index.data(QtCore.Qt.DisplayRole)
             objs = []
             for obj in self.objects:
-                oFC = FreeCAD.ActiveDocument.getObject(obj[1])
+                oFC = self.getObjFromListViewItem(obj[1])
                 if oFC.BOM_mat == material:
-                    objs.append(oFC.Name)
+                    # if oFC.Name == obj[1]:
+                    objs.append(obj[1])
+                    # elif oFC.Name in obj[1]:
+                    #     objs.append(f"{obj[1].split(oFC.Name)[0]}{oFC.Name}")
             if objs:
                 FreeCADGui.Selection.clearSelection()
                 for obj in objs:
-                    FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.getObject(obj))
+                    names = obj.split(".")
+                    obj_name = names[0]
+                    if len(names) > 1:
+                        subobj = ".".join(names[1:]) + "."
+                        # msgCsl(f"onSelectFreeCAD_clicked: {FreeCAD.ActiveDocument.Name} - {obj_name} -> {subobj}")
+                        FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name, subobj)
+                    else:
+                        FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name)
 
     def onClickSelectBodiesOfMat(self):
         if self.widget.material_listView.currentIndex():
@@ -650,26 +678,37 @@ class BOM_dialog(QtCore.QObject):
             material = current_index.data(QtCore.Qt.DisplayRole)
             bodies = []
             for obj in self.objects:
-                oFC = FreeCAD.ActiveDocument.getObject(obj[1])
+                oFC = self.getObjFromListViewItem(obj[1])
                 if oFC.BOM_mat == material:
-                    if "PartDesign::" in oFC.TypeId:
-                        FreeCADGui.Selection.clearSelection()
-                        FreeCADGui.Selection.addSelection(oFC)
-                        sels = Gui.Selection.getSelectionEx("", 0)
-                        sel = sels[0]
-                        # doc = sel.Document
-                        sub = sel.SubElementNames[0] if sel.SubElementNames else ""
-                        subs = sub.split(".")[:-1]
-                        # path = [sel.Object] + [doc.getObject(name) for name in subs]
-                        # msgCsl(f"{[o.Label for o in path]}")
-                        # msgCsl(f"Object {obj[1]} Body name: {subs[-2]}")
-                        bodies.append(subs[-2])
-                    if "Part::" in oFC.TypeId:
-                        bodies.append(oFC.Name)
+                    # if "PartDesign::" in oFC.TypeId:
+                    #     FreeCADGui.Selection.clearSelection()
+                    #     FreeCADGui.Selection.addSelection(oFC)
+                    #     sels = Gui.Selection.getSelectionEx("", 0)
+                    #     sel = sels[0]
+                    #     # doc = sel.Document
+                    #     sub = sel.SubElementNames[0] if sel.SubElementNames else ""
+                    #     subs = sub.split(".")[:-1]
+                    #     # path = [sel.Object] + [doc.getObject(name) for name in subs]
+                    #     # msgCsl(f"{[o.Label for o in path]}")
+                    #     # msgCsl(f"Object {obj[1]} Body name: {subs[-2]}")
+                    #     bodies.append(subs[-2])
+                    # if "Part::" in oFC.TypeId:
+                    viewObj = getParentViewObject(oFC)
+                    if viewObj.Name == obj[1]:
+                        bodies.append(obj[1])
+                    elif viewObj.Name in obj[1]:
+                        bodies.append(f"{obj[1].split(viewObj.Name)[0]}{viewObj.Name}")
             if bodies:
                 FreeCADGui.Selection.clearSelection()
                 for body in bodies:
-                    FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.getObject(body))
+                    names = body.split(".")
+                    obj_name = names[0]
+                    if len(names) > 1:
+                        subobj = ".".join(names[1:]) + "."
+                        # msgCsl(f"onSelectFreeCAD_clicked: {FreeCAD.ActiveDocument.Name} - {obj_name} -> {subobj}")
+                        FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name, subobj)
+                    else:
+                        FreeCADGui.Selection.addSelection(FreeCAD.ActiveDocument.Name, obj_name)
 
     def onSelectFreeCAD_clicked(self):
         self.setUnSelectedObjectTransparent()
@@ -692,15 +731,15 @@ class BOM_dialog(QtCore.QObject):
 
     def setBOMtoTrue(self):
         for index in self.widget.BOM_objects_listView.selectedIndexes():
-            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            item = self.my_model.itemFromIndex(index)
+            obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
             obj.BOM_destination = True
         self.BOM_objects_List_update()
 
     def setBOMtoFalse(self):
         for index in self.widget.BOM_objects_listView.selectedIndexes():
-            item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            item = self.my_model.itemFromIndex(index)
+            obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
             obj.BOM_destination = False
         self.BOM_objects_List_update()
 
@@ -829,8 +868,9 @@ class BOM_dialog(QtCore.QObject):
         # 1. Supprimer les objets de grain dans le document
         for key in list(self.grain_objs.keys()):
             try:
-                name = self.grain_objs[key].Name
-                FreeCAD.ActiveDocument.removeObject(name)
+                # name = self.grain_objs[key].Name
+                # FreeCAD.ActiveDocument.removeObject(name)
+                self.removeGrainObj(key)
                 # msgCsl(f"Suppression de l'objet : {name}")
             except:
                 pass

@@ -287,7 +287,7 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
         # 2. Ouvrir le sélecteur de panneau
         selector_dialog = PanneauSelectorDialog(self.doc_panneaux_data, parent=self)
         
-        if selector_dialog.exec_() == QtWidgets.QDialog.Accepted:
+        if selector_dialog.exec() == QtWidgets.QDialog.Accepted:
             new_bom_mat = selector_dialog.get_selected_panneau()
             
             if new_bom_mat:
