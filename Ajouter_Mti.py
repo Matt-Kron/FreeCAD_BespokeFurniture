@@ -8,7 +8,7 @@ def Add_mti():
                     "Mt i b",
                     "Mt i",
                     "Mt i r1",
-                    "Mt i rainuree",
+                    "Mt i rainure",
                 )
 
     # sel_obj = Gui.Selection.getSelection()

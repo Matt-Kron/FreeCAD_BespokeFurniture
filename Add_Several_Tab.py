@@ -199,6 +199,7 @@ class ShelfDialog(QtWidgets.QDialog):
             if self.objB:
                 self.ui.label_objB.setText(f"<<{self.objB.Label}>> épaisseur")
                 self.bottom_thickness_edit.setText(str(find_additive_box(self.objB).Shape.BoundBox.ZLength))
+            if self.objT:
                 self.ui.label_objT.setText(f"<<{self.objT.Label}>> épaisseur")
                 self.top_thickness_edit.setText(str(find_additive_box(self.objT).Shape.BoundBox.ZLength))
         if self.mode[0] == "H":
