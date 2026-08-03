@@ -90,6 +90,8 @@ def updateValueExpression(name, shape, elements_Obj, myDoc):
                 elif ele[PROP_TYPE] == "App::PropertyBool":
                     setattr(shape, ele[PROP_NAME], 'True' == ele[PROP_CONTENU])
                     # print(f"shape: {ele[OBJ_NAME]}, propriété: {ele[PROP_NAME]}, valeur: {ele[PROP_CONTENU]}, valeur bool(): {bool(ele[PROP_CONTENU])}")
+                elif ele[PROP_NAME] == 'AttachmentSupport':
+                    setattr(shape, ele[PROP_NAME], [(App.ActiveDocument.getObj(ele[PROP_CONTENU]),'')])
                 else:
                     setattr(shape, ele[PROP_NAME], ele[PROP_CONTENU])
     for ele in elements_Obj:
