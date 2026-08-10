@@ -387,7 +387,7 @@ class ShelfDialog(QtWidgets.QDialog):
         if not self.group_index: self.group_index = getMaxShelvesIndex() + 1
         if not self.group_type:
             self.groupTypeChange()
-        obj.setTag(groupe_etageres = f"{self.group_type}{self.group_index}")
+        obj.setTag(groupe_etageres := f"{self.group_type}{self.group_index}")
         obj.temp = True
         obj.object.fond = self.backProp
         self.objects.append(obj)

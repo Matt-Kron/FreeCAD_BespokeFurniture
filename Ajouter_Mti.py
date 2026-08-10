@@ -11,15 +11,15 @@ def Add_mti():
                     "Mt i rainure",
                 )
 
-    # sel_obj = Gui.Selection.getSelection()
+    sel_obj = Gui.Selection.getSelection()
 
     part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, "Caisson")
 
-    # if sel_obj:
-    #     Gui.Selection.addSelection(part)
-    #     import FreeCAD_BespokeFurniture.MtEntreDeuxTv as MacroVertical
-    #     MacroVertical.run_assignment_macro()
-    # return part
+    if sel_obj:
+        Gui.Selection.addSelection(part)
+        import FreeCAD_BespokeFurniture.MtEntreDeuxTv as MacroVertical
+        MacroVertical.run_assignment_macro()
+    return part
 
 if __name__ == "__main__":
     Add_mti()
