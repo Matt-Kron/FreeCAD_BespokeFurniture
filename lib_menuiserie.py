@@ -61,7 +61,7 @@ def msgCsl(message):
 
 def userMsg(message):
 	App.Console.PrintMessage(message + "\n")
-    
+
 def get_parent_part(obj):
     current = obj
     if current and current.TypeId == "App::Part":
@@ -212,7 +212,7 @@ def get_BOM_mat_thickness(obj):
         return float(obj.BOM_mat.split("x")[-1])
     else:
         return 0
-    
+
 def getObjTag(obj):
     tag_prop = {}
     if hasattr(obj, "bspf_tag"):
@@ -235,6 +235,14 @@ def getLastEtgGrpIndex():
     return max_index
 
 def setObjTag(obj, typ = None, caisson = None, groupe_etageres = None):
+    """
+        type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice pour <à vérifer>
+        caisson: permet d'identifier un sous-ensemble formé de 2 montants et 2 traverses. CSP pour le caisson principal du meuble formé
+                des montants gauche et droit, et des traverses inf et sup. CSi pour les autres.
+        groupe_etageres: permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.
+                ETG pour des tablettes
+                MTI pour des montants
+    """
     if not hasattr(obj, "bspf_tag"):
         obj.addProperty("App::PropertyString", "bspf_tag", "UserProp")
         obj.bspf_tag = ";;"
