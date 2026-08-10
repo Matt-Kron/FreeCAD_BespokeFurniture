@@ -119,7 +119,7 @@ class bom_obj():
     def __init__(self, fcObj = None):
         self.fcObj
         self.grain = ""
-        
+
 
 class BOM_dialog(QtCore.QObject):
     def __init__(self):
@@ -196,8 +196,8 @@ class BOM_dialog(QtCore.QObject):
         self.connections_for_listView_selectionChanged = {
                                                             "BOM_objects_listView" : "on_bom_selection_changed",
                                                             "material_listView"    : "onMaterialSelectionChanged",
-                                                         } 
-        
+                                                         }
+
         for m_key, m_val in self.connections_for_button_clicked.items():
             # msgCsl( "Connecting : " + str(m_key) + " and " + str(m_val) )
             getattr(self.widget, str(m_key)).clicked.connect(getattr(self, str(m_val)))
@@ -276,14 +276,17 @@ class BOM_dialog(QtCore.QObject):
     def SelectedObjectsPropertyChange(self, prop, value):
         for index in self.widget.BOM_objects_listView.selectedIndexes():
             item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
-            obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+            ext_label = item.data(QtCore.Qt.UserRole)
+            msgCsl(f"SelectedObjectsPropertyChange ext_label {ext_label} ")
+            obj = self.getObjFromListViewItem(ext_label)
             # if prop.Prefix: prefix = prop.Group else: prefix = ""
             prop_name = (prop["Group"] + "_" if prop["Prefix"] else "") + prop["Name"]
             # msgCsl(f"prop_name {prop_name}")
             if not hasattr(obj, prop_name):
                 obj.addProperty(prop["Type"], prop_name, prop["Group"])
             setattr(obj, prop_name, value)
-            if self.drawEdgeBand(obj):
+            if self.drawEdgeBand(ext_label):
                 FreeCAD.ActiveDocument.recompute()
 
     def updateEdgeBandCheckBoxFromObj(self):
@@ -299,7 +302,10 @@ class BOM_dialog(QtCore.QObject):
             for index in self.widget.BOM_objects_listView.selectedIndexes():
                 item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
                 # msgCsl(f"updateEdgeBandCheckBoxFromObj, obj = None, item {item.text()}")
-                obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
+                ext_label = item.data(QtCore.Qt.UserRole)
+                obj = self.getObjFromListViewItem(ext_label)
+                msgCsl(f"updateEdgeBandCheckBoxFromObj ext_label {ext_label} ")
                 for key, edgeband in EDGEBAND_PROPERTIES.items():
                     # msgCsl(f"updateEdgeBandCheckBoxFromObj, key edgeband {key}, obj {obj.Label}")
                     prop_name = (edgeband["Group"] + "_" if edgeband["Prefix"] else "") + edgeband["Name"]
@@ -307,7 +313,7 @@ class BOM_dialog(QtCore.QObject):
                         getattr(self.widget, keyToObj[key]).setChecked(getattr(obj, prop_name))
                     else:
                         getattr(self.widget, keyToObj[key]).setChecked(False)
-                f_recompute = self.drawEdgeBand(obj)
+                f_recompute = self.drawEdgeBand(ext_label)
         else:
             self.updateEdgeBands = True
             return
@@ -315,8 +321,8 @@ class BOM_dialog(QtCore.QObject):
         # self.onSelectFreeCAD_clicked()
         self.updateEdgeBands = True
 
-    def drawEdgeBand(self, obj):
-        
+    def drawEdgeBand(self, ext_label):
+
         # label = obj.Label.lower()
         # is_mt = any(k in label for k in ["mt", "montant"])
         # is_tv = any(k in label for k in ["tv", "traverse", "tab", "tablette"])
@@ -325,6 +331,16 @@ class BOM_dialog(QtCore.QObject):
         GRAIN_OBJ_OFFSET = 20
         # GRAIN_OBJ_THICKNESS = 19
         # if hasattr(obj, "Nest_grain"):
+        msgCsl(f"drawEdgeBand ext_label {ext_label} ")
+        obj = self.getObjFromListViewItem(ext_label)
+        activedoc = FreeCAD.ActiveDocument
+        tmp_obj = activedoc.getObject(ext_label.split(".")[0])
+        if hasattr(tmp_obj, "LinkedObject"):
+            targetdoc = activedoc.getObject(ext_label.split(".")[0]).LinkedObject.Document
+        else:
+            targetdoc = activedoc
+        # msgCsl(f"targetdoc {targetdoc.Name}")
+
         x_length = obj.Shape.BoundBox.XLength
         y_length = obj.Shape.BoundBox.YLength
         z_length = obj.Shape.BoundBox.ZLength
@@ -378,12 +394,14 @@ class BOM_dialog(QtCore.QObject):
         else:
             pl_body = FreeCAD.Placement()
         ocolor = (0, 255, 255)
+        # ext_label = f"<{obj.Document.Name}>{obj.Label}"
+        # msgCsl(f"drawEdgeBand ext_label {ext_label} ")
         for key, edgeband in EDGEBAND_PROPERTIES.items():
             prop_name = (edgeband["Group"] + "_" if edgeband["Prefix"] else "") + edgeband["Name"]
             translation = FreeCAD.Vector(0.0, 0.0, 0.0)
-            if self.edgeband_objs.get(obj.Label):
-                if self.edgeband_objs[obj.Label].get(edgeband["Name"]):
-                    self.edgeband_objs[obj.Label][edgeband["Name"]].Visibility = getattr(obj, prop_name)
+            if self.edgeband_objs.get(ext_label):
+                if self.edgeband_objs[ext_label].get(edgeband["Name"]):
+                    self.edgeband_objs[ext_label][edgeband["Name"]].Visibility = getattr(obj, prop_name)
                     continue
             if hasattr(obj, prop_name):
                 # msgCsl(f"obj {obj.Label}, prop_name {prop_name}")
@@ -391,7 +409,10 @@ class BOM_dialog(QtCore.QObject):
                     face = KeyToFace[obj.Nest_Thickness][obj.Nest_grain][AvantToFront[edgeband["Name"]]]
                     points = Faces[face]
                     translation = translation.add(FreeCAD.Vector(Offset[face]))*GRAIN_OBJ_OFFSET
+                    FreeCAD.setActiveDocument(targetdoc.Name)
                     oline = Draft.make_wire(points, placement=FreeCAD.Placement(), closed=True, face=True, support=None)
+                    FreeCADGui.Selection.clearSelection()
+                    FreeCAD.setActiveDocument(activedoc.Name)
                     pl_res = pl_obj.multiply(pl_body)
                     # msgCsl(f"pl_obj.multiply(pl_res) {pl_res}")
                     pl_res.move(translation)
@@ -404,14 +425,14 @@ class BOM_dialog(QtCore.QObject):
                     oline.ViewObject.PointColor = ocolor
                     oline.ViewObject.Transparency = 0
                     oline.ViewObject.LineWidth = 0.01
-                    if obj.Label not in self.edgeband_objs:
-                        self.edgeband_objs[obj.Label] = {}
-                    self.edgeband_objs[obj.Label][edgeband["Name"]] = oline
+                    if ext_label not in self.edgeband_objs:
+                        self.edgeband_objs[ext_label] = {}
+                    self.edgeband_objs[ext_label][edgeband["Name"]] = oline
                     EdgeBand_created = True
                 else:
-                    if self.edgeband_objs.get(obj.Label):
-                        if self.edgeband_objs[obj.Label].get(edgeband["Name"]):
-                            self.edgeband_objs[obj.Label][edgeband["Name"]].Visibility = getattr(obj, prop_name)
+                    if self.edgeband_objs.get(ext_label):
+                        if self.edgeband_objs[ext_label].get(edgeband["Name"]):
+                            self.edgeband_objs[ext_label][edgeband["Name"]].Visibility = getattr(obj, prop_name)
         return EdgeBand_created
 
     def onClickRightEdgeBandCheckChanged(self):
@@ -441,7 +462,7 @@ class BOM_dialog(QtCore.QObject):
     def onMaterialSelectionChanged(self, selected, deselected):
         # 'selected' contient les indexes qui viennent d'être cochés/cliqués
         indices = selected.indexes()
-        
+
         if indices:
             index = indices[0] # Récupère le premier index sélectionné
             material = index.data() # Récupère le texte de l'item
@@ -449,12 +470,12 @@ class BOM_dialog(QtCore.QObject):
             # On vide la sélection actuelle
             selection_model.clearSelection()
             for i in range(self.my_model.rowCount()):
-                item = self.my_model.item(i) # Récupère l'objet QStandardItem 
+                item = self.my_model.item(i) # Récupère l'objet QStandardItem
                 # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
                 obj = self.getObjFromListViewItem(item.data(QtCore.Qt.UserRole))
                 # msgCsl(f"onMaterialSelectionChanged: item.data {item.data(QtCore.Qt.UserRole)} - {obj.Label}")
                 if material == obj.BOM_mat:
-                    selection_model.select(self.my_model.index(i, 0), 
+                    selection_model.select(self.my_model.index(i, 0),
                                 QtCore.QItemSelectionModel.Select)
 
     def on_bom_selection_changed(self, selected, deselected):
@@ -487,7 +508,7 @@ class BOM_dialog(QtCore.QObject):
     def setUnSelectedObjectTransparent(self):
         if self.widget.Transparency_checkBox.isChecked():
             selindexes = self.widget.BOM_objects_listView.selectedIndexes()
-    
+
             for i in range(self.widget.BOM_objects_listView.model().rowCount()):
                 item = self.my_model.item(i) #self.widget.BOM_objects_listView.model().item(i) # Récupère l'objet QStandardItem
                 # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
@@ -495,11 +516,12 @@ class BOM_dialog(QtCore.QObject):
                 viewer_container = getParentViewObject(obj)
                 if not item.index() in selindexes:
                     viewer_container.ViewObject.Transparency = 90
-                    key = f"<{obj.Document.Name}>{obj.Label}"
-                    if self.edgeband_objs.get(key):
+                    ext_label = item.data(QtCore.Qt.UserRole)
+                    # msgCsl(f"setUnSelectedObjectTransparent key {key} ")
+                    if self.edgeband_objs.get(ext_label):
                         for edgeband in EDGEBAND_PROPERTIES.values():
-                            if self.edgeband_objs[key].get(edgeband["Name"]):
-                                self.edgeband_objs[key][edgeband["Name"]].Visibility = False
+                            if self.edgeband_objs[ext_label].get(edgeband["Name"]):
+                                self.edgeband_objs[ext_label][edgeband["Name"]].Visibility = False
                 else:
                     viewer_container.ViewObject.Transparency = 0
         else:
@@ -518,8 +540,9 @@ class BOM_dialog(QtCore.QObject):
 
     def onClickWoodGrainDisplay(self):
         self.GrainObjectsListUpdate()
+        # select the object in Gui if transparency is not checked
         if not self.widget.Transparency_checkBox.isChecked():
-                self.onSelectFreeCAD_clicked()
+            self.onSelectFreeCAD_clicked()
 
     def GrainObjectsListUpdate(self):
 
@@ -556,7 +579,7 @@ class BOM_dialog(QtCore.QObject):
             except:
                 f_recompute = self.createGrainObj(ext_label)
         if f_recompute: FreeCAD.ActiveDocument.recompute()
-                    
+
     def removeGrainObj(self, grain_obj_label):
         try:
             obj = self.getObjFromListViewItem(grain_obj_label)
@@ -564,7 +587,7 @@ class BOM_dialog(QtCore.QObject):
             self.grain_objs.pop(grain_obj_label)
         except:
             pass
-                
+
     def createGrainObj(self, ext_label):
         GRAIN_OBJ_OFFSET = 40
         GRAIN_OBJ_THICKNESS = 19
@@ -576,7 +599,7 @@ class BOM_dialog(QtCore.QObject):
             y_length = obj.Shape.BoundBox.YLength
             z_length = obj.Shape.BoundBox.ZLength
             o_parent = get_parent_part(obj)
-            msgCsl(f"createGrainObj parent = {o_parent.Label}")
+            # msgCsl(f"createGrainObj parent = {o_parent.Label}")
             # pl = o_parent.Placement
             try:
                 if not "PartDesign" in obj.TypeId:
@@ -586,8 +609,8 @@ class BOM_dialog(QtCore.QObject):
             except:
                 pl_obj = FreeCAD.Placement()
                 # msgCsl(f"pl_obj {pl_obj}")
-            if obj.InList[0].TypeId == "PartDesign::Body":
-                pl_body = obj.InList[0].Placement
+            if  hasattr(obj, "_Body"): # obj.InList[0].TypeId == "PartDesign::Body":
+                pl_body = obj._Body.Placement  #InList[0].Placement
                 # msgCsl(f"pl_body {pl_body}")
             else:
                 pl_body = FreeCAD.Placement()
@@ -605,7 +628,12 @@ class BOM_dialog(QtCore.QObject):
                 ocolor = (0, 0, 255)
 
             activedoc = FreeCAD.ActiveDocument
-            targetdoc = activedoc.getObject(ext_label.split(".")[0]).LinkedObject.Document
+            # msgCsl(f"createGrainObj, ext_label {ext_label} ")
+            tmp_obj = activedoc.getObject(ext_label.split(".")[0])
+            if hasattr(tmp_obj, "LinkedObject"):
+                targetdoc = activedoc.getObject(ext_label.split(".")[0]).LinkedObject.Document
+            else:
+                targetdoc = activedoc
             # msgCsl(f"targetdoc {targetdoc.Name}")
             FreeCAD.setActiveDocument(targetdoc.Name)
             # FreeCAD.ActiveDocument = FreeCAD.getDocument(targetdoc.Name)
@@ -879,7 +907,8 @@ class BOM_dialog(QtCore.QObject):
             for edge in list(self.edgeband_objs[key].keys()):
                 try:
                     name = self.edgeband_objs[key][edge].Name
-                    FreeCAD.ActiveDocument.removeObject(name)
+                    obj = self.getObjFromListViewItem(key)
+                    obj.Document.removeObject(name)
                     # msgCsl(f"Suppression de l'objet : {name}")
                 except:
                     pass
