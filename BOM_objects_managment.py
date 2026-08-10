@@ -278,7 +278,7 @@ class BOM_dialog(QtCore.QObject):
             item = self.widget.BOM_objects_listView.model().itemFromIndex(index)
             # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
             ext_label = item.data(QtCore.Qt.UserRole)
-            msgCsl(f"SelectedObjectsPropertyChange ext_label {ext_label} ")
+            # msgCsl(f"SelectedObjectsPropertyChange ext_label {ext_label} ")
             obj = self.getObjFromListViewItem(ext_label)
             # if prop.Prefix: prefix = prop.Group else: prefix = ""
             prop_name = (prop["Group"] + "_" if prop["Prefix"] else "") + prop["Name"]
@@ -305,7 +305,7 @@ class BOM_dialog(QtCore.QObject):
                 # obj = FreeCAD.ActiveDocument.getObject(self.objects[item.row()][1])
                 ext_label = item.data(QtCore.Qt.UserRole)
                 obj = self.getObjFromListViewItem(ext_label)
-                msgCsl(f"updateEdgeBandCheckBoxFromObj ext_label {ext_label} ")
+                # msgCsl(f"updateEdgeBandCheckBoxFromObj ext_label {ext_label} ")
                 for key, edgeband in EDGEBAND_PROPERTIES.items():
                     # msgCsl(f"updateEdgeBandCheckBoxFromObj, key edgeband {key}, obj {obj.Label}")
                     prop_name = (edgeband["Group"] + "_" if edgeband["Prefix"] else "") + edgeband["Name"]
@@ -331,7 +331,7 @@ class BOM_dialog(QtCore.QObject):
         GRAIN_OBJ_OFFSET = 20
         # GRAIN_OBJ_THICKNESS = 19
         # if hasattr(obj, "Nest_grain"):
-        msgCsl(f"drawEdgeBand ext_label {ext_label} ")
+        # msgCsl(f"drawEdgeBand ext_label {ext_label} ")
         obj = self.getObjFromListViewItem(ext_label)
         activedoc = FreeCAD.ActiveDocument
         tmp_obj = activedoc.getObject(ext_label.split(".")[0])
