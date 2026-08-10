@@ -71,7 +71,7 @@ class ShelfDialog(QtWidgets.QDialog):
         self.backProp = False
         self.group_type = None
         self.objL, self.objR, self.objB, self.objT = None, None, None, None
-        if int(self.mode[1]):
+        if int(self.mode[1]): # si mode a 1 pour le 2eme caracteres, V1 ou H1, et donc qu'il s'agit d'une modification d'un groupe existant
             self.duplicate = duplicate
             self.initObj()
         # self.objL, self.obj2 = obj1, obj2
@@ -182,7 +182,7 @@ class ShelfDialog(QtWidgets.QDialog):
         # Configurer les boutons
         self.ok_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
-        
+
         # Configurer les montants
         # obj1, obj2 = get_selected_objects()
         # if self.obj1.TypeId != "App::Part":
@@ -481,7 +481,7 @@ def add_shelves(shelf_positions):
             Gui.Selection.addSelection(obj)
         t_part = Add_tab()
         t_part.Placement.Base.z = pos
-        
+
 
 def main():
     selection = Gui.Selection.getSelection()
