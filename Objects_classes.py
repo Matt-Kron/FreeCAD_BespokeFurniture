@@ -1,6 +1,20 @@
 import FreeCAD as App
 from FreeCAD_BespokeFurniture.lib_menuiserie import *
 
+"""
+    type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut 1 pour les montants et traverses du caisson,
+            et 2 pour les éléments internes au caisson
+    caisson: permet d'identifier un sous-ensemble formé de 2 montants et 2 traverses. CSP pour le caisson principal du meuble formé
+            des montants gauche et droit, et des traverses inf et sup. CSi pour les autres.
+    groupe_etageres: AAA+B+X permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.
+            AAA=ETG pour des tablettes
+            AAA=MTI pour des montants
+            B=C pour les éléments équidistants en prenant le milieu de l'épaisseur des éléments
+            B=T pour une répartition égale en enlevant l'épaisseur des éléments de l'espace à diviser
+            B=A pour une répartition arbitraire définie par l'utilisateur
+            X pour l'indice du groupe
+"""
+
 class bspfObj:
     def __init__(self):
         self.type = "" # first field of bspf_tag property, defining wether the object is vertical or horizontal, assembled at the end or in the middle
@@ -12,6 +26,7 @@ class bspfObj:
         self.thickness = 0
         self.temp = False
         self.caisson = ""
+        self.getTag()
 
     def getTag(self):
         if self._object:
@@ -45,4 +60,4 @@ class bspfObj:
 
     def setTag(self, typ = None, caisson = None, groupe_etageres = None):
         setObjTag(self._object, typ, caisson, groupe_etageres)
-
+        self.getTag()

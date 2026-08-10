@@ -236,12 +236,17 @@ def getLastEtgGrpIndex():
 
 def setObjTag(obj, typ = None, caisson = None, groupe_etageres = None):
     """
-        type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice pour <à vérifer>
+        type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut 1 pour les montants et traverses du caisson,
+               et 2 pour les éléments internes au caisson
         caisson: permet d'identifier un sous-ensemble formé de 2 montants et 2 traverses. CSP pour le caisson principal du meuble formé
                 des montants gauche et droit, et des traverses inf et sup. CSi pour les autres.
-        groupe_etageres: permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.
-                ETG pour des tablettes
-                MTI pour des montants
+        groupe_etageres: AAA+B+X permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.
+                AAA=ETG pour des tablettes
+                AAA=MTI pour des montants
+                B=C pour les éléments équidistants en prenant le milieu de l'épaisseur des éléments
+                B=T pour une répartition égale en enlevant l'épaisseur des éléments de l'espace à diviser
+                B=A pour une répartition arbitraire définie par l'utilisateur
+                X pour l'indice du groupe
     """
     if not hasattr(obj, "bspf_tag"):
         obj.addProperty("App::PropertyString", "bspf_tag", "UserProp")
