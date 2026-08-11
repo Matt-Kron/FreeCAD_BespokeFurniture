@@ -68,8 +68,8 @@ def get_parent_part(obj):
         return current
     while current:
         # 1. Tenter d'accéder directement au parent structurel (si disponible)
-        if hasattr(current, "getParent") and current.getParent():
-            current = current.getParent()
+        if hasattr(current, "getParentGeoFeatureGroup") and current.getParentGeoFeatureGroup():
+            current = current.getParentGeoFeatureGroup()
         else:
             # 2. Sinon, chercher dans InList mais filtrer les liens logiques
             parents = current.InList
@@ -236,8 +236,11 @@ def getLastEtgGrpIndex():
 
 def setObjTag(obj, typ = None, caisson = None, groupe_etageres = None):
     """
-        type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut 1 pour les montants et traverses du caisson,
-               et 2 pour les éléments internes au caisson
+        type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut:
+            1 pour les montants et traverses du caisson,
+            2 pour les éléments internes au caisson, montant et tablettes
+            3 pour les façades comme les porte, tiroir, fileurs selon le plan X-Z
+            4 pour le fond
         caisson: permet d'identifier un sous-ensemble formé de 2 montants et 2 traverses. CSP pour le caisson principal du meuble formé
                 des montants gauche et droit, et des traverses inf et sup. CSi pour les autres.
         groupe_etageres: AAA+B+X permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.

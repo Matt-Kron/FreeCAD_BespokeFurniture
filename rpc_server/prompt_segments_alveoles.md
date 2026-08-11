@@ -1,0 +1,21 @@
+tu es expert développeur python FreeCAD.
+Ecrit ou modifie le script [[extract_segments_alveoles]] qui:
+- cherche tous les AdditiveBox ou SubtractiveBox avec une propriété bspf_tag qui contient "CS"
+- récupère tous les parents App::Part de l'objet avec [[lib_menuiserire.py]] get_parent_part()
+- à partir de la specification [[extract_role_dimensions]] crée un fichier json `meuble_simplifie.json` de sortie qui contient uniquement les panneaux verticaux et horizontaux:
+  - segments
+    - nom: Label du additivebox
+      - debut: vecteur segment.origine
+      - fin: debut + vecteur segment.longueur
+  - alveoles: à déduire à partir des segments. utilise une librairie python qui fait ce genre de tâche s'il en existe
+    - ID: des lettres pour les colonnes, et un nombre pour les lignes. car cela ressemblera à un quadrillage. Les lettres sont croissantes en fonction de la coordonnée y du point inférieur gauche de l'alvéole
+    - role: null par défaut. pourra être des fonctionnalités de meuble comme (penderie, pulls, livres, assiettes)
+    - enveloppe: les panneaux qui constituent l'enveloppe, pour pouvoir les identifier afin de les modifier pour agrandir, réduire, scinder l'alvéole selon sa fonction.
+	    - paroi gauche: nom du segment de gauche
+	    - paroi droite: nom du segment de droite
+	    - paroi basse: nom du segment inférieur
+	    - paroi haute: nom du segment supérieur
+	- position: le coin inférieur gauche de l'enveloppe
+	- largeur
+	- profondeur: profondeur du panneau le moins profond de l'enveloppe
+	- hauteur

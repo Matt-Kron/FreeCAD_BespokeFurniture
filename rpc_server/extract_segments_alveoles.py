@@ -171,13 +171,13 @@ def run():
     additive_boxes = []
     for obj in doc.Objects:
         is_box = obj.isDerivedFrom("PartDesign::AdditiveBox") or obj.isDerivedFrom("PartDesign::SubtractiveBox")
-        if is_box and hasattr(obj, "BOM_mat"):
+        if (is_box and hasattr(obj, "bspf_tag")) and "CS" in obj.bspf_tag:
             additive_boxes.append(obj)
 
-    App.Console.PrintMessage(f"-> Trouvé {len(additive_boxes)} objets 'Box' avec la propriété 'BOM_mat'.\n")
+    App.Console.PrintMessage(f"-> Trouvé {len(additive_boxes)} objets 'Box' avec la propriété 'bspf_tag'.\n")
 
     if not additive_boxes:
-        App.Console.PrintWarning("Aucun AdditiveBox ou SubtractiveBox avec la propriété BOM_mat n'a été détecté.\n")
+        App.Console.PrintWarning("Aucun AdditiveBox ou SubtractiveBox avec la propriété bspf_tag n'a été détecté.\n")
         return
 
     # 2. Extraction des segments des panneaux verticaux et horizontaux

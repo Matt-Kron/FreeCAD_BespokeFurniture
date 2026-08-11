@@ -6,7 +6,9 @@ import threading
 
 import FreeCAD
 from PySide import QtCore
-from .add_object import add_object
+from .tools.add_object import add_object
+from .tools.remove_object import remove_object
+from .tools.get_document_tree import get_document_tree
 
 global_rpc_server = None
 active_rpc_port = None  # Conserve le port réellement attribué
@@ -52,23 +54,12 @@ class RPCDispatcher(QtCore.QObject):
         return self.result
 
 # --- API EXPOSÉE POUR LE DESSIN DE MEUBLES ---
-def remove_object(obj_label: str):
-
-    obj = FreeCAD.ActiveDocument.getObjectsByLabel(obj_label)[0]
-    label = obj.Label
-    obj.removeObjectsFromDocument()
-    FreeCAD.ActiveDocument.removeObject(obj.Name)
-    return {
-        "status": "removed",
-        "name": label,
-        # "dimensions": [obj.Length.Value, obj.Width.Value, obj.Height.Value],
-        # "position": [x, y, z]
-    }
-
+#
 # Mapping des méthodes JSON-RPC
 RPC_METHODS = {
     "add_object": add_object,
-    "remove_object": remove_object
+    "remove_object": remove_object,
+    "get_document_tree": get_document_tree
 }
 
 dispatcher = RPCDispatcher()
@@ -152,4 +143,4 @@ def restart_rpc_server():
     return start_rpc_server()
 
 # Démarrage au chargement du script
-rpc_server = start_rpc_server()
+# rpc_server = start_rpc_server()

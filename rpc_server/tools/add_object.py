@@ -1,6 +1,6 @@
 import FreeCAD
 
-from .. import add_object_lib
+from ... import add_object_lib
 from add_object_lib import addObjectPartBodyBox
 
 # Dictionnaire des structures dftStruct pour chaque fichier Ajouter_*
@@ -77,14 +77,14 @@ DFT_STRUCT_MAP = {
     ),
 }
 
-def add_object(obj_type: str, parent_obj_label: str) -> dict:
+def add_object(object_type: str, parent_obj_label: str = "Caisson") -> dict:
 
-    part = addObjectPartBodyBox(DFT_STRUCT_MAP[obj_type], FreeCAD.ActiveDocument, parent_obj_label)
+    part = addObjectPartBodyBox(DFT_STRUCT_MAP[object_type], FreeCAD.ActiveDocument, parent_obj_label)
 
     return {
         "status": "created",
         "name": part.Label,
-        "type": obj_type
+        "type": object_type
         # "dimensions": [obj.Length.Value, obj.Width.Value, obj.Height.Value],
         # "position": [x, y, z]
     }

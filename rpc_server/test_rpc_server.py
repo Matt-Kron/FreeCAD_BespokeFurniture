@@ -3,7 +3,7 @@ import json
 import urllib.request
 from pathlib import Path
 
-RPC_URL = "http://127.0.0.1:9149"
+RPC_URL = "http://127.0.0.1:9147"
 
 DIRPATH = Path(__file__).parent
 
@@ -55,7 +55,7 @@ class TestFreeCADRPCServer(unittest.TestCase):
             res =  rpc_call("remove_object", [label])
             result = res["result"]
             self.assertEqual(result["status"], "removed")
-            self.assertEqual(result["name"], label)
+            self.assertEqual(result["label"], label)
 
     # def test_01_add_component(self):
     #     """Test de la création d'un panneau verticall."""
@@ -79,23 +79,23 @@ class TestFreeCADRPCServer(unittest.TestCase):
     #     self.assertEqual(result["status"], "updated")
     #     self.assertEqual(result["dimensions"], [900.0, 380.0, 18.0])
 
-    # def test_03_get_document_tree(self):
-    #     """Test de la récupération de l'arbre d'objets."""
-    #     rpc_call("add_component", ["montant", "Panneau_1", 0.0, 0.0, 0.0])
-    #     rpc_call("add_component", ["leg", "Pied_1", 10.0, 10.0, -150.0])
+    def test_03_get_document_tree(self):
+        """Test de la récupération de l'arbre d'objets."""
+        # rpc_call("add_component", ["montant", "Panneau_1", 0.0, 0.0, 0.0])
+        # rpc_call("add_component", ["leg", "Pied_1", 10.0, 10.0, -150.0])
 
-    #     res = rpc_call("get_document_tree")
-    #     self.assertNotIn("error", res)
+        res = rpc_call("get_document_tree")
+        self.assertNotIn("error", res)
 
-    #     tree = res["result"]
-    #     self.assertEqual(len(tree["objects"]), 2)
-    #     names = [obj["name"] for obj in tree["objects"]]
-    #     self.assertIn("Panneau_1", names)
-    #     self.assertIn("Pied_1", names)
+        tree = res["result"]
+        self.assertEqual(len(tree["objects"]), 13)
+        names = [obj["name"] for obj in tree["objects"]]
+        self.assertIn("Tv_inf_p", names)
+        self.assertIn("Fond_p", names)
 
-    # def test_04_method_not_found(self):
-    #     """Test de la gestion d'erreur sur une méthode inexistante."""
-    #     res = rpc_call("invalide_method")
+    # def Fondt_found(self):
+    #     """Test de la Fondtion d'erreur sur une méthode inexistante."""
+    #     res = rpc_call("Fondnvalide_method")
     #     self.assertIn("error", res)
     #     self.assertEqual(res["error"]["code"], -32601)
 
