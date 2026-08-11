@@ -14,7 +14,7 @@ def sanitize_name(name):
     return clean or "unnamed"
 
 def run():
-    macro_dir = "/home/matthou/snap/freecad/common/Macros menuiserie"
+    macro_dir = App.getUserMacroDir()
     json_path = os.path.join(macro_dir, "meuble_simplifie.json")
 
     if not os.path.exists(json_path):
@@ -28,14 +28,21 @@ def run():
         App.Console.PrintError(f"[ERREUR] Échec de la lecture du fichier JSON: {e}\n")
         return
 
-    # Création d'un nouveau document FreeCAD
-    doc = App.newDocument("MeubleSimplifieGeometrie")
-    App.Console.PrintMessage("Nouveau document 'MeubleSimplifieGeometrie' créé.\n")
+    # Création d'un nouveau document FreeCAD s'il n'est pas déja ouvert
+    doc_name = "MeubleSimplifieGeometrie"
+    if doc_name in App.listDocuments().keys():
+        doc = App.getDocument(doc_name)
+    else:
+        doc = App.newDocument(doc_name)
+        App.Console.PrintMessage("Nouveau document 'MeubleSimplifieGeometrie' créé.\n")
 
     # Création du conteneur principal App::Part étiqueté "meuble simplifie"
-    meuble_part = doc.addObject("App::Part", "MeubleSimplifie")
-    meuble_part.Label = "meuble simplifie"
-    App.Console.PrintMessage("Conteneur App::Part 'meuble simplifie' créé.\n")
+    meuble_part_name = "MeubleSimplifie"
+    meuble_part = doc.getObject(meuble_part_name)
+    if not meuble_part:
+        meuble_part = doc.addObject("App::Part", meuble_part_name)
+        meuble_part.Label = "meuble simplifie"
+        App.Console.PrintMessage("Conteneur App::Part 'meuble simplifie' créé.\n")
 
     # 1. Création des segments (sous forme de lignes Part)
     segments = data.get("segments", [])
@@ -57,8 +64,10 @@ def run():
 
             # Assurer un nom unique dans le document pour éviter les collisions
             unique_name = doc.getUniqueObjectName(internal_name)
+            if unique_name != internal_name:
+                doc.removeObject(internal_name)
 
-            line_obj = doc.addObject("Part::Feature", unique_name)
+            line_obj = doc.addObject("Part::Feature", internal_name)
             line_obj.Shape = line_shape
             line_obj.Label = s_nom
 
@@ -131,8 +140,10 @@ def run():
             try:
                 internal_name = sanitize_name(f"Alveole_{cell_id}")
                 unique_name = doc.getUniqueObjectName(internal_name)
+                if unique_name != internal_name:
+                    doc.removeObject(internal_name)
 
-                box_obj = doc.addObject("Part::Box", unique_name)
+                box_obj = doc.addObject("Part::Box", internal_name)
                 box_obj.Length = dx
                 box_obj.Width = dy
                 box_obj.Height = dz

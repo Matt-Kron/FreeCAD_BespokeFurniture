@@ -4,35 +4,9 @@ import sys
 import FreeCAD as App
 
 # S'assurer que le chemin des macros est présent dans sys.path pour importer librairie.py
-macro_dir = "/home/matthou/snap/freecad/common/Macros menuiserie"
-if macro_dir not in sys.path:
-    sys.path.insert(0, macro_dir)
+macro_dir = App.getUserMacroDir()
 
-try:
-    from librairie import get_parent_part
-except ImportError as e:
-    App.Console.PrintError(f"Erreur lors de l'import de 'librairie.py' : {e}\n")
-    # Implémentation de secours si librairie.py n'est pas trouvable de manière standard
-    def get_parent_part(obj):
-        current = obj
-        if current and current.TypeId == "App::Part":
-            return current
-        while current:
-            if hasattr(current, "getParent") and current.getParent():
-                current = current.getParent()
-            else:
-                parents = current.InList
-                found_parent = None
-                for p in parents:
-                    if (p.TypeId == "App::Part" or p.isDerivedFrom("App::DocumentObjectGroup")) and current in p.OutList:
-                        found_parent = p
-                        break
-                current = found_parent
-            if current and current.TypeId == "App::Part":
-                return current
-            if not current:
-                break
-        return None
+from ..lib_menuiserie import get_parent_part
 
 
 def group_coordinates(coords, tolerance):
@@ -212,8 +186,8 @@ def run():
                 # pos_x = parent_part.Placement.Base.x
                 # pos_y = parent_part.Placement.Base.y
                 # pos_z = parent_part.Placement.Base.z
-                App.Console.PrintMessage(f"parent {parent_part.Label}\n")
-                App.Console.PrintMessage(f"vec {vec}:.2f \n")
+                # App.Console.PrintMessage(f"parent {parent_part.Label}\n")
+                # App.Console.PrintMessage(f"vec {vec}:.2f \n")
             pos_x = vec[0]
             pos_y = vec[1]
             pos_z = vec[2]
@@ -403,13 +377,53 @@ def run():
 
         # 7b. Recherche de la profondeur minimale parmi les panneaux identifiés
         boundary_depths = []
+        boundary_segments = {}
         for name in [left_name, right_name, bottom_name, top_name]:
             if name:
                 for s in segments_list:
                     if s["nom"] == name:
                         boundary_depths.append(s["profondeur"])
+                        boundary_segments[name] = s
                         break
         min_depth = min(boundary_depths) if boundary_depths else 0.0
+
+        # Calcul des positions et dimensions selon les instructions
+        # Position x (axe horizontal) = position de la paroi gauche + largeur de la paroi gauche
+        if left_name and left_name in boundary_segments:
+            left_segment = boundary_segments[left_name]
+            pos_x = left_segment['debut'][horiz_axis_idx] + left_segment['largeur']
+        else:
+            pos_x = cell['u1']
+
+        # Position z (axe vertical) = position de la paroi inférieur + hauteur de la paroi inférieur
+        if bottom_name and bottom_name in boundary_segments:
+            bottom_segment = boundary_segments[bottom_name]
+            pos_z = bottom_segment['debut'][vert_axis_idx] + bottom_segment['hauteur']
+        else:
+            pos_z = cell['v1']
+
+        # Position y (axe profondeur) = position de la paroi horizontale la plus en retrait vers l'arrière
+        # On prend la coordonnée depth la plus petite parmi tous les panneaux de l'enveloppe
+        depth_positions = []
+        for name in [left_name, right_name, bottom_name, top_name]:
+            if name and name in boundary_segments:
+                seg = boundary_segments[name]
+                depth_positions.append(seg['debut'][depth_axis_idx])
+        pos_y = min(depth_positions) if depth_positions else w_avg
+
+        # Largeur = position paroi droite - position.x de l'alvéole
+        if right_name and right_name in boundary_segments:
+            right_segment = boundary_segments[right_name]
+            largeur = right_segment['debut'][horiz_axis_idx] - pos_x
+        else:
+            largeur = abs(cell['u2'] - cell['u1'])
+
+        # Hauteur = position paroi haute - position.z de l'alvéole
+        if top_name and top_name in boundary_segments:
+            top_segment = boundary_segments[top_name]
+            hauteur = top_segment['debut'][vert_axis_idx] - pos_z
+        else:
+            hauteur = abs(cell['v2'] - cell['v1'])
 
         # Reconstruction des coordonnées du coin inférieur gauche (position)
         def make_3d_point(u_val, v_val, w_val):
@@ -419,7 +433,7 @@ def run():
             pt[depth_axis_idx] = w_val
             return pt
 
-        bas_gauche = make_3d_point(cell['u1'], cell['v1'], w_avg)
+        position_alveole = make_3d_point(pos_x, pos_z, pos_y)
 
         alveoles_list.append({
             "id": cell_id,
@@ -430,10 +444,10 @@ def run():
                 "paroi basse": bottom_name,
                 "paroi haute": top_name
             },
-            "position": bas_gauche,
-            "largeur": abs(cell['u2'] - cell['u1']),
+            "position": position_alveole,
+            "largeur": largeur,
             "profondeur": min_depth,
-            "hauteur": abs(cell['v2'] - cell['v1'])
+            "hauteur": hauteur
         })
 
     # Tri des alvéoles par ID de façon naturelle (A1, A2, B1, B2...)

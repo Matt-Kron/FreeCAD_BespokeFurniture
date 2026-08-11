@@ -16,6 +16,9 @@ Ecrit ou modifie le script [[extract_segments_alveoles]] qui:
 	    - paroi basse: nom du segment inférieur
 	    - paroi haute: nom du segment supérieur
 	- position: le coin inférieur gauche de l'enveloppe
-	- largeur
+		- x = position de la paroi gauche + largeur de la paroi gauche
+		- y = position de la paroi horizontale la plus en retrait vers l'arrière
+		- z = position de la paroi inférieur + hauteur de la paroi inférieur
+	- largeur = position paroi droite - position.x de l'alvéole
 	- profondeur: profondeur du panneau le moins profond de l'enveloppe
-	- hauteur
+	- hauteur = position paroi haute - position.z de l'alvéole
