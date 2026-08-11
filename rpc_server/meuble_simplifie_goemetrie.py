@@ -1,8 +1,11 @@
 import json
-import os
 import sys
 import FreeCAD as App
 import Part
+
+# Importer la fonction de mise à jour depuis extract_segments_alveoles
+from .extract_segments_alveoles import update_meuble_simplifie, JSON_CONTAINER_NAME
+
 
 def sanitize_name(name):
     """
@@ -13,40 +16,71 @@ def sanitize_name(name):
         clean = "obj_" + clean
     return clean or "unnamed"
 
-def run():
-    macro_dir = App.getUserMacroDir()
-    json_path = os.path.join(macro_dir, "meuble_simplifie.json")
 
-    if not os.path.exists(json_path):
-        App.Console.PrintError(f"[ERREUR] Fichier JSON introuvable : {json_path}\n")
-        return
+def get_json_data_from_container(doc):
+    """
+    Récupère les données JSON depuis l'objet App::Part conteneur.
+
+    Args:
+        doc: Document FreeCAD
+
+    Returns:
+        dict: Les données JSON ou None si non trouvés
+    """
+    # Trouver l'objet conteneur
+    json_container = None
+    for obj in doc.Objects:
+        if obj.Name == JSON_CONTAINER_NAME and obj.isDerivedFrom("App::Part"):
+            json_container = obj
+            break
+
+    if not json_container:
+        App.Console.PrintError(f"[ERREUR] Objet '{JSON_CONTAINER_NAME}' non trouvé dans le document.\n")
+        return None
+
+    if not hasattr(json_container, "JSONData") or not json_container.JSONData:
+        App.Console.PrintError(f"[ERREUR] Aucune donnée JSON dans l'objet '{JSON_CONTAINER_NAME}'.\n")
+        return None
 
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except Exception as e:
-        App.Console.PrintError(f"[ERREUR] Échec de la lecture du fichier JSON: {e}\n")
-        return
+        return json.loads(json_container.JSONData)
+    except json.JSONDecodeError as e:
+        App.Console.PrintError(f"[ERREUR] Échec du décodage JSON: {e}\n")
+        return None
 
-    # Création d'un nouveau document FreeCAD s'il n'est pas déja ouvert
-    doc_name = "MeubleSimplifieGeometrie"
-    if doc_name in App.listDocuments().keys():
-        doc = App.getDocument(doc_name)
-    else:
-        doc = App.newDocument(doc_name)
-        App.Console.PrintMessage("Nouveau document 'MeubleSimplifieGeometrie' créé.\n")
 
-    # Création du conteneur principal App::Part étiqueté "meuble simplifie"
-    meuble_part_name = "MeubleSimplifie"
-    meuble_part = doc.getObject(meuble_part_name)
+def create_geometry_in_container(doc):
+    """
+    Crée les géométries (segments et alvéoles) dans l'objet App::Part du document.
+
+    Args:
+        doc: Document FreeCAD contenant le JSON
+    """
+    # Récupérer les données
+    data = get_json_data_from_container(doc)
+    if not data:
+        return False
+
+    # Trouver le conteneur App::Part "meuble_simplifie"
+    meuble_part = None
+    for obj in doc.Objects:
+        if obj.Name == JSON_CONTAINER_NAME and obj.isDerivedFrom("App::Part"):
+            meuble_part = obj
+            break
+
     if not meuble_part:
-        meuble_part = doc.addObject("App::Part", meuble_part_name)
-        meuble_part.Label = "meuble simplifie"
-        App.Console.PrintMessage("Conteneur App::Part 'meuble simplifie' créé.\n")
+        App.Console.PrintError(f"[ERREUR] Objet conteneur '{JSON_CONTAINER_NAME}' non trouvé.\n")
+        return False
 
     # 1. Création des segments (sous forme de lignes Part)
     segments = data.get("segments", [])
     App.Console.PrintMessage(f"Création de {len(segments)} segments...\n")
+
+    # Supprimer les anciennes géométries et annotations
+    for obj in meuble_part.Group:
+        if obj.Name.startswith("Segment_") or obj.Name.startswith("Alveole_") or obj.Name.startswith("Annotation_Alveole_"):
+            doc.removeObject(obj.Name)
+
     for s in segments:
         s_nom = s.get("nom", "Segment")
         debut = s.get("debut")
@@ -62,10 +96,14 @@ def run():
             line_shape = Part.makeLine(p1, p2)
             internal_name = sanitize_name(f"Segment_{s_nom}")
 
-            # Assurer un nom unique dans le document pour éviter les collisions
+            # Assurer un nom unique dans le document
             unique_name = doc.getUniqueObjectName(internal_name)
             if unique_name != internal_name:
-                doc.removeObject(internal_name)
+                # Supprimer l'ancien objet s'il existe
+                try:
+                    doc.removeObject(internal_name)
+                except:
+                    pass
 
             line_obj = doc.addObject("Part::Feature", internal_name)
             line_obj.Shape = line_shape
@@ -89,7 +127,7 @@ def run():
     App.Console.PrintMessage(f"Création de {len(alveoles)} alvéoles...\n")
 
     if alveoles:
-        # Déterminer dynamiquement l'axe horizontal principal à partir des positions des alvéoles
+        # Déterminer dynamiquement l'axe horizontal principal
         xs = [cell["position"][0] for cell in alveoles if "position" in cell]
         ys = [cell["position"][1] for cell in alveoles if "position" in cell]
 
@@ -119,11 +157,11 @@ def run():
             if profondeur < 1.0:
                 profondeur = 300.0
 
-            # Calcul du placement en centrant l'alvéole sur l'axe de profondeur
+            # Calcul du placement
             if horiz_axis_idx == 0:  # X est l'axe horizontal, Y est l'axe de profondeur
                 x_min = position[0]
                 z_min = position[2]
-                y_min = position[1] # - profondeur / 2.0
+                y_min = position[1]
 
                 dx = largeur
                 dy = profondeur
@@ -131,7 +169,7 @@ def run():
             else:  # Y est l'axe horizontal, X est l'axe de profondeur
                 y_min = position[1]
                 z_min = position[2]
-                x_min = position[0] # - profondeur / 2.0
+                x_min = position[0]
 
                 dx = profondeur
                 dy = largeur
@@ -141,7 +179,11 @@ def run():
                 internal_name = sanitize_name(f"Alveole_{cell_id}")
                 unique_name = doc.getUniqueObjectName(internal_name)
                 if unique_name != internal_name:
-                    doc.removeObject(internal_name)
+                    # Supprimer l'ancien objet s'il existe
+                    try:
+                        doc.removeObject(internal_name)
+                    except:
+                        pass
 
                 box_obj = doc.addObject("Part::Box", internal_name)
                 box_obj.Length = dx
@@ -159,12 +201,12 @@ def run():
                     view_obj = box_obj.ViewObject
                     if view_obj:
                         view_obj.ShapeColor = (0.2, 0.6, 1.0)  # Bleu ciel
-                        view_obj.Transparency = 70             # Transparence à 70% pour voir à travers
-                        view_obj.LineColor = (0.1, 0.4, 0.8)   # Bordures bleues plus soutenues
+                        view_obj.Transparency = 70             # Transparence à 70%
+                        view_obj.LineColor = (0.1, 0.4, 0.8)   # Bordures bleues
             except Exception as e:
                 App.Console.PrintError(f"Erreur lors de la création de l'alvéole '{cell_id}': {e}\n")
 
-    # Recalculer le document pour dessiner toutes les formes géométriques
+    # Recalculer le document
     doc.recompute()
     App.Console.PrintMessage("Recomputation du document terminée.\n")
 
@@ -173,6 +215,33 @@ def run():
         import FreeCADGui as Gui
         Gui.SendMsgToActiveView("ViewFit")
         App.Console.PrintMessage("Vue 3D cadrée sur le meuble.\n")
+
+    return True
+
+
+def run():
+    """
+    Fonction principale : analyse le document actif, crée/met à jour le JSON,
+    puis crée les géométries dans le même document.
+    """
+    doc = App.ActiveDocument
+    if not doc:
+        App.Console.PrintError("[ERREUR] Aucun document actif.\n")
+        return
+
+    App.Console.PrintMessage("=== Mise à jour du meuble simplifié ===\n")
+
+    # Étape 1 : Mettre à jour les données JSON
+    if not update_meuble_simplifie(doc):
+        App.Console.PrintError("[ERREUR] Échec de la mise à jour des alvéoles.\n")
+        return
+
+    # Étape 2 : Créer les géométries dans le même document
+    if not create_geometry_in_container(doc):
+        App.Console.PrintError("[ERREUR] Échec de la création des géométries.\n")
+        return
+
+    App.Console.PrintMessage("=== Terminé ===\n")
 
 
 if __name__ == "__main__":

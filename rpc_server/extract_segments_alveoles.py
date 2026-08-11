@@ -1,12 +1,11 @@
 import json
-import os
 import sys
 import FreeCAD as App
 
-# S'assurer que le chemin des macros est présent dans sys.path pour importer librairie.py
-macro_dir = App.getUserMacroDir()
-
 from ..lib_menuiserie import get_parent_part
+
+# Variable globale pour stocker le conteneur
+JSON_CONTAINER_NAME = "meuble_simplifie"
 
 
 def group_coordinates(coords, tolerance):
@@ -131,11 +130,170 @@ def col_index_to_letter(index):
     return letter
 
 
-def run():
-    doc = App.ActiveDocument
+def set_alveole_role(doc, alveole_id, role):
+    """
+    Modifie le rôle d'une alvéole dans le document.
+
+    Args:
+        doc: Document FreeCAD
+        alveole_id: ID de l'alvéole (ex: "A1", "B2")
+        role: Nouveau rôle à attribuer (ex: "penderie", "pulls", "livres", "assiettes")
+    """
     if not doc:
-        App.Console.PrintError("Aucun document actif trouvé dans FreeCAD.\n")
+        App.Console.PrintError("Aucun document fourni.\n")
+        return False
+
+    # Trouver l'objet App::Part contenant le JSON
+    json_container = None
+    for obj in doc.Objects:
+        if obj.Name == "meuble_simplifie" and obj.isDerivedFrom("App::Part"):
+            json_container = obj
+            break
+
+    if not json_container:
+        App.Console.PrintError(f"Objet 'meuble_simplifie' non trouvé dans le document.\n")
+        return False
+
+    # Lire le JSON existant
+    if not hasattr(json_container, "JSONData") or not json_container.JSONData:
+        App.Console.PrintError("Aucune donnée JSON trouvée dans l'objet.\n")
+        return False
+
+    try:
+        data = json.loads(json_container.JSONData)
+    except json.JSONDecodeError as e:
+        App.Console.PrintError(f"Erreur de décodage JSON: {e}\n")
+        return False
+
+    # Trouver et modifier l'alvéole
+    found = False
+    for alveole in data.get("alveoles", []):
+        if alveole.get("id") == alveole_id:
+            alveole["role"] = role
+            found = True
+            break
+
+    if not found:
+        App.Console.PrintError(f"Alvéole '{alveole_id}' non trouvée.\n")
+        return False
+
+    # Mettre à jour la propriété
+    json_container.JSONData = json.dumps(data, indent=4, ensure_ascii=False)
+    App.Console.PrintMessage(f"Rôle de l'alvéole '{alveole_id}' mis à jour avec succès.\n")
+    return True
+
+
+def get_json_container(doc, container_name=JSON_CONTAINER_NAME):
+    """
+    Récupère ou crée l'objet App::Part contenant le JSON.
+
+    Args:
+        doc: Document FreeCAD
+        container_name: Nom de l'objet conteneur (par défaut: JSON_CONTAINER_NAME)
+
+    Returns:
+        L'objet App::Part contenant le JSON, ou None
+    """
+    # Chercher un objet existant
+    for obj in doc.Objects:
+        if obj.Name == container_name and obj.isDerivedFrom("App::Part"):
+            return obj
+
+    # Créer un nouvel objet App::Part
+    try:
+        json_container = doc.addObject("App::Part", container_name)
+        doc.recompute()
+        return json_container
+    except Exception as e:
+        App.Console.PrintError(f"Erreur lors de la création de l'objet conteneur: {e}\n")
+        return None
+
+
+def create_alveole_annotations(doc, alveoles_list, json_container):
+    """
+    Crée des annotations Draft pour chaque alvéole avec son ID et son rôle.
+
+    Args:
+        doc: Document FreeCAD
+        alveoles_list: Liste des alvéoles
+        json_container: L'objet App::Part conteneur
+    """
+    if not App.GuiUp:
         return
+
+    try:
+        import Draft
+    except ImportError:
+        App.Console.PrintWarning("Draft module non disponible, pas d'annotations créées.\n")
+        return
+
+    # Supprimer les anciennes annotations des alvéoles du conteneur
+    for obj in json_container.Group[:]:  # Copie de la liste pour itération sûre
+        if obj.Name.startswith("Text") or (hasattr(obj, 'Label') and "Alvéole" in str(obj.Label)):
+            doc.removeObject(obj.Name)
+
+    for alveole in alveoles_list:
+        alveole_id = alveole.get("id", "?")
+        role = alveole.get("role")
+        position = alveole.get("position", [0, 0, 0])
+        largeur = alveole.get("largeur", 0)
+        hauteur = alveole.get("hauteur", 0)
+
+        # Position de l'annotation : au centre de la face avant de l'alvéole, légèrement décalée vers l'avant
+        x, y, z = position
+
+        # Position au centre horizontal et vertical de la face avant
+        annotation_pos = App.Vector(
+            x + largeur / 2,
+            y - 50,  # Décalage de 50mm vers l'avant (face avant)
+            z + hauteur / 2
+        )
+
+        # Créer le texte de l'annotation
+        text = f"{alveole_id}"
+        if role and role != "non défini" and role is not None:
+            text += f"\nRôle: {role}"
+
+        # Créer l'annotation avec Draft.make_text
+        try:
+            # Créer un placement avec la position
+            pl = App.Placement()
+            pl.Base = annotation_pos
+            pl.Rotation = App.Rotation()  # Rotation par défaut
+
+            # Créer le texte avec Draft.make_text
+            text_obj = Draft.make_text([text], placement=pl)
+
+            # Ajouter manuellement au conteneur App::Part
+            json_container.addObject(text_obj)
+
+            # Configurer le label
+            text_obj.Label = f"Alvéole {alveole_id}"
+
+            # Style visuel
+            if App.GuiUp and text_obj.ViewObject:
+                text_obj.ViewObject.TextColor = (0.0, 0.0, 0.0)  # Noir
+                text_obj.ViewObject.FontSize = 30  # Taille de police
+                text_obj.ViewObject.DisplayMode = u"Screen"
+
+        except Exception as e:
+            App.Console.PrintWarning(f"Erreur lors de la création de l'annotation pour {alveole_id}: {e}\n")
+
+
+def update_meuble_simplifie(doc):
+    """
+    Fonction principale pour analyser le meuble et mettre à jour l'objet meuble_simplifie.
+    Peut être appelée depuis d'autres scripts.
+
+    Args:
+        doc: Document FreeCAD à analyser
+
+    Returns:
+        bool: True si succès, False sinon
+    """
+    if not doc:
+        App.Console.PrintError("Aucun document fourni.\n")
+        return False
 
     App.Console.PrintMessage("=============================================\n")
     App.Console.PrintMessage("Macro : Analyse de Meuble et Déduction d'Alvéoles (Enrichi)\n")
@@ -166,28 +324,27 @@ def run():
         if not (is_vertical or is_horizontal):
             continue
 
+        # Récupérer le parent via get_parent_part
+        parent_part = get_parent_part(obj)
+        parent_label = parent_part.Label if parent_part else obj.Label
+
         child = obj
         parent_list = []
-        parent_part = child.getParentGeoFeatureGroup()
-        i=1
-        # if parent_part: App.Console.PrintMessage(f"parent {i}, {parent_part.Label}\n")
-        while parent_part and i<5:
+        if parent_part:
             parent_list.append(parent_part)
             child = parent_part
-            parent_part = child.getParentGeoFeatureGroup()
-            i += 1
-            # if parent_part: App.Console.PrintMessage(f"parent {i}, {parent_part.Label}\n")
+            grand_parent = child.getParentGeoFeatureGroup()
+            i = 1
+            while grand_parent and i < 5:
+                parent_list.append(grand_parent)
+                child = grand_parent
+                grand_parent = child.getParentGeoFeatureGroup()
+                i += 1
 
         vec = App.Vector(0, 0, 0)
-        # App.Console.PrintMessage(f"parent list {parent_list}\n")
         if parent_list:
-            for parent_part in parent_list:
-                vec = vec.add(parent_part.Placement.Base)
-                # pos_x = parent_part.Placement.Base.x
-                # pos_y = parent_part.Placement.Base.y
-                # pos_z = parent_part.Placement.Base.z
-                # App.Console.PrintMessage(f"parent {parent_part.Label}\n")
-                # App.Console.PrintMessage(f"vec {vec}:.2f \n")
+            for pp in parent_list:
+                vec = vec.add(pp.Placement.Base)
             pos_x = vec[0]
             pos_y = vec[1]
             pos_z = vec[2]
@@ -211,7 +368,7 @@ def run():
             role = "horizontal"
 
         segments_list.append({
-            "nom": obj.Label,
+            "nom": parent_label,
             "role": role,
             "debut": debut,
             "fin": fin,
@@ -402,14 +559,14 @@ def run():
         else:
             pos_z = cell['v1']
 
-        # Position y (axe profondeur) = position de la paroi horizontale la plus en retrait vers l'arrière
-        # On prend la coordonnée depth la plus petite parmi tous les panneaux de l'enveloppe
+        # Position y (axe profondeur) = position de la paroi la plus en arrière
+        # On prend la coordonnée depth la plus grande (y max) parmi tous les panneaux de l'enveloppe
         depth_positions = []
         for name in [left_name, right_name, bottom_name, top_name]:
             if name and name in boundary_segments:
                 seg = boundary_segments[name]
                 depth_positions.append(seg['debut'][depth_axis_idx])
-        pos_y = min(depth_positions) if depth_positions else w_avg
+        pos_y = max(depth_positions) if depth_positions else w_avg
 
         # Largeur = position paroi droite - position.x de l'alvéole
         if right_name and right_name in boundary_segments:
@@ -462,19 +619,106 @@ def run():
             "fin": s["fin"]
         })
 
-    output_data = {
+    new_output_data = {
         "segments": segments_json,
         "alveoles": alveoles_list
     }
 
-    # Sauvegarde dans le fichier meuble_simplifie.json
-    output_path = os.path.join(macro_dir, "meuble_simplifie.json")
+    # 9. Récupérer ou créer l'objet conteneur App::Part
+    json_container = get_json_container(doc, "meuble_simplifie")
+    if not json_container:
+        App.Console.PrintError("Impossible de créer l'objet conteneur.\n")
+        return
+
+    # 10. Logique de mise à jour
+    existing_data = None
+    if hasattr(json_container, "JSONData") and json_container.JSONData:
+        try:
+            existing_data = json.loads(json_container.JSONData)
+        except json.JSONDecodeError:
+            existing_data = None
+
+    if existing_data:
+        # Mise à jour : conserver les rôles des alvéoles existantes
+        # Créer un dictionnaire des alvéoles existantes indexées par leurs 4 parois
+        existing_alveoles_by_walls = {}
+        for existing_alveole in existing_data.get("alveoles", []):
+            enveloppe = existing_alveole.get("enveloppe", {})
+            wall_key = (
+                enveloppe.get("paroi gauche"),
+                enveloppe.get("paroi droite"),
+                enveloppe.get("paroi basse"),
+                enveloppe.get("paroi haute")
+            )
+            existing_alveoles_by_walls[wall_key] = existing_alveole
+
+        updated_alveoles = []
+        preserved_roles_count = 0
+
+        for new_alveole in alveoles_list:
+            enveloppe = new_alveole.get("enveloppe", {})
+            wall_key = (
+                enveloppe.get("paroi gauche"),
+                enveloppe.get("paroi droite"),
+                enveloppe.get("paroi basse"),
+                enveloppe.get("paroi haute")
+            )
+
+            # Vérifier si une alvéole existante a les mêmes 4 parois
+            if wall_key in existing_alveoles_by_walls:
+                existing_alveole = existing_alveoles_by_walls[wall_key]
+                # Conserver le rôle de l'alvéole existante
+                new_alveole["role"] = existing_alveole.get("role")
+                preserved_roles_count += 1
+
+            updated_alveoles.append(new_alveole)
+
+        # Créer les données finales avec les segments nouveaux et les alvéoles mises à jour
+        output_data = {
+            "segments": segments_json,
+            "alveoles": updated_alveoles
+        }
+        App.Console.PrintMessage(f"-> Mise à jour de {len(updated_alveoles)} alvéoles ({preserved_roles_count} rôles conservés).\n")
+    else:
+        # Première exécution : créer les données
+        output_data = new_output_data
+        App.Console.PrintMessage(f"-> Création de {len(alveoles_list)} alvéoles.\n")
+
+    # 11. Stocker le JSON dans la propriété de l'objet
     try:
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(output_data, f, indent=4, ensure_ascii=False)
-        App.Console.PrintMessage(f"\n[SUCCÈS] Fichier JSON exporté avec succès : '{output_path}'\n")
+        # Ajouter la propriété JSONData si elle n'existe pas
+        if not hasattr(json_container, "JSONData"):
+            json_container.addProperty("App::PropertyString", "JSONData", "JSON", "Données JSON du meuble simplifié")
+
+        json_container.JSONData = json.dumps(output_data, indent=4, ensure_ascii=False)
+        doc.recompute()
+        App.Console.PrintMessage(f"\n[SUCCÈS] JSON stocké dans l'objet '{JSON_CONTAINER_NAME}'.\n")
     except Exception as e:
-        App.Console.PrintError(f"\n[ERREUR] Impossible de sauvegarder le fichier JSON: {e}\n")
+        App.Console.PrintError(f"\n[ERREUR] Impossible de stocker le JSON: {e}\n")
+        return False
+
+    # 12. Créer les annotations pour les alvéoles
+    try:
+        create_alveole_annotations(doc, output_data.get("alveoles", []), json_container)
+        doc.recompute()
+        App.Console.PrintMessage("Annotations des alvéoles créées.\n")
+    except Exception as e:
+        App.Console.PrintWarning(f"Avertissement : Impossible de créer les annotations: {e}\n")
+
+    return True
+
+
+def run():
+    """
+    Fonction d'entrée pour l'exécution directe du script.
+    Appelle update_meuble_simplifie sur le document actif.
+    """
+    doc = App.ActiveDocument
+    if not doc:
+        App.Console.PrintError("Aucun document actif trouvé dans FreeCAD.\n")
+        return
+
+    update_meuble_simplifie(doc)
 
 
 if __name__ == "__main__":
