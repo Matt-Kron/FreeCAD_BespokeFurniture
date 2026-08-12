@@ -1,0 +1,18 @@
+{
+  "name": "move_object",
+  "description": "\n            Déplace un objet selon sa nature:\n                - seuls les montants et les traverses internes au meuble sont déplaçables.\n                - les traverses supérieure et inférieure changent en fonction de paramètres globaux du meuble, ainsi que les montants gauche et droit.\n                  Ce sont les composants qui constituent le cadre du caisson qui ne sont pas modifiables directement.\n                - un montant peut être déplacé horizontalement, selon l'axe X\n                - une tablette ou traverse peut être déplacée verticalement, selon l'axe Z\n                - si l'outil retourne le statut \"user_request\", la position de l'élément est définie par une expression dans FreeCAD,\n                  il faut demander l'accord de l'utilisateur pour écraser la formule et modifier la propriété \"user_confirmation\" à Vrai\n\n        ",
+  "parameters": {
+    "object_label": {
+      "type": "str",
+      "description": "L'étiquette (label) de l'élément à déplacer"
+    },
+    "value": {
+      "type": "float",
+      "description": "Indique le déplacement à effecture. La veleur sera ajoutée à la position de l'élément."
+    },
+    "user_confirmation": {
+      "type": "bool",
+      "description": "Indique si l'utilisateur à confirmer d'écraser la formule"
+    }
+  }
+}

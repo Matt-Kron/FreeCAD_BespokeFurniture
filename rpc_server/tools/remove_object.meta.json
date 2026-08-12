@@ -1,0 +1,10 @@
+{
+  "name": "remove_object",
+  "description": "Supprime un composant de meuble dans FreeCAD",
+  "parameters": {
+    "object_label": {
+      "type": "str",
+      "description": "l'étiquette - label - de l'objet à supprimer"
+    }
+  }
+}

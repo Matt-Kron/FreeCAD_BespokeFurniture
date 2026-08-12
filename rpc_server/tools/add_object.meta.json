@@ -1,0 +1,22 @@
+{
+  "name": "add_object",
+  "description": "Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir).",
+  "parameters": {
+    "object_type": {
+      "type": "str",
+      "enum": [
+        "Montant",
+        "Tablette",
+        "Porte",
+        "Tiroir",
+        "Fond"
+      ],
+      "description": "Le type de composant à ajouter"
+    },
+    "parent_obj_label": {
+      "type": "str",
+      "default": "Caisson",
+      "description": "Label de l'objet parent dans l'arbre FreeCAD"
+    }
+  }
+}

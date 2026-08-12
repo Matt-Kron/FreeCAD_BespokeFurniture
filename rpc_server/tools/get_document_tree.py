@@ -1,7 +1,13 @@
 import FreeCAD
-from ...lib_menuiserie import get_parent_part
+from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
 
-def get_document_tree():
+TOOL_META = {
+        "name": "get_document_tree",
+        "description": "Récupère l'arborescence complète du meuble, sans géométrie",
+        "parameters": {},
+}
+
+def run() -> dict:
     doc = FreeCAD.ActiveDocument
     if not doc:
         return {"document": None, "objects": []}

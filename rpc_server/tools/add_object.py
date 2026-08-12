@@ -1,7 +1,25 @@
 import FreeCAD
 
-from ... import add_object_lib
+from FreeCAD_BespokeFurniture import add_object_lib
 from add_object_lib import addObjectPartBodyBox
+
+# Descripteur
+TOOL_META = {
+        "name": "add_object",
+        "description": """Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir).""",
+        "parameters": {
+            "object_type": {
+                "type": "str",
+                "enum": ["Montant", "Tablette", "Porte", "Tiroir", "Fond"],
+                "description": "Le type de composant à ajouter"
+            },
+            "parent_obj_label": {
+                "type": "str",
+                "default": "Caisson",
+                "description": "Label de l'objet parent dans l'arbre FreeCAD"
+            }
+        }
+}
 
 # Dictionnaire des structures dftStruct pour chaque fichier Ajouter_*
 DFT_STRUCT_MAP = {
@@ -77,13 +95,13 @@ DFT_STRUCT_MAP = {
     ),
 }
 
-def add_object(object_type: str, parent_obj_label: str = "Caisson") -> dict:
+def run(object_type: str, parent_obj_label: str = "Caisson") -> dict:
 
     part = addObjectPartBodyBox(DFT_STRUCT_MAP[object_type], FreeCAD.ActiveDocument, parent_obj_label)
 
     return {
-        "status": "created",
-        "name": part.Label,
+        "status": "success",
+        "label": part.Label,
         "type": object_type
         # "dimensions": [obj.Length.Value, obj.Width.Value, obj.Height.Value],
         # "position": [x, y, z]

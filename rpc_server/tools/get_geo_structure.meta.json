@@ -1,0 +1,5 @@
+{
+  "name": "get_geo_structure",
+  "description": "Récupère la géométrie simplifiée du meuble du document actif",
+  "parameters": {}
+}

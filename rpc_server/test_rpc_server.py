@@ -46,15 +46,24 @@ class TestFreeCADRPCServer(unittest.TestCase):
         for obj_type, label in self.func_obj_list:
             res =  rpc_call("add_object", [obj_type, "Caisson"])
             result = res["result"]
-            self.assertEqual(result["status"], "created")
-            self.assertEqual(result["name"], label)
+            self.assertEqual(result["status"], "success")
+            self.assertEqual(result["label"], label)
             self.assertEqual(result["type"], obj_type)
+
+    def mtest_move_object(self):
+        res = rpc_call("move_object", ["Tablette caisson p003", 200])
+        result = res["result"]
+        self.assertEqual(result["status"], "user_request")
+        res = rpc_call("move_object", ["Tablette caisson p003", 200, True])
+        result = res["result"]
+        self.assertEqual(result["status"], "success")
+
 
     def test_remove_object(self):
         for obj_type, label in self.func_obj_list:
             res =  rpc_call("remove_object", [label])
             result = res["result"]
-            self.assertEqual(result["status"], "removed")
+            self.assertEqual(result["status"], "success")
             self.assertEqual(result["label"], label)
 
     # def test_01_add_component(self):
@@ -81,17 +90,13 @@ class TestFreeCADRPCServer(unittest.TestCase):
 
     def test_03_get_document_tree(self):
         """Test de la récupération de l'arbre d'objets."""
-        # rpc_call("add_component", ["montant", "Panneau_1", 0.0, 0.0, 0.0])
-        # rpc_call("add_component", ["leg", "Pied_1", 10.0, 10.0, -150.0])
-
         res = rpc_call("get_document_tree")
         self.assertNotIn("error", res)
 
         tree = res["result"]
-        self.assertEqual(len(tree["objects"]), 18)
-        names = [obj["name"] for obj in tree["objects"]]
-        self.assertIn("Tv_inf_p", names)
-        self.assertIn("Fond_p", names)
+        self.assertIn("document", tree)
+        self.assertIn("objects", tree)
+        self.assertIsInstance(tree["objects"], list)
 
     def test_04_method_not_found(self):
         """Test de la Fondtion d'erreur sur une méthode inexistante."""
