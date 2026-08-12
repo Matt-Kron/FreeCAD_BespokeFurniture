@@ -9,6 +9,7 @@ from PySide import QtCore
 from .tools.add_object import add_object
 from .tools.remove_object import remove_object
 from .tools.get_document_tree import get_document_tree
+from .tools.get_geo_structure import get_geo_structure
 
 global_rpc_server = None
 active_rpc_port = None  # Conserve le port réellement attribué
@@ -59,7 +60,8 @@ class RPCDispatcher(QtCore.QObject):
 RPC_METHODS = {
     "add_object": add_object,
     "remove_object": remove_object,
-    "get_document_tree": get_document_tree
+    "get_document_tree": get_document_tree,
+    "get_geo_structure": get_geo_structure
 }
 
 dispatcher = RPCDispatcher()

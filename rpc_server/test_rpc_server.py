@@ -28,8 +28,8 @@ def rpc_call(method: str, params: list = None):
 class TestFreeCADRPCServer(unittest.TestCase):
 
     func_obj_list = [
-                        ["Montant", "Mt i p"],
-                        ["Tablette", "Tablette caisson p"],
+                        ["Montant", "Mt i p002"],
+                        ["Tablette", "Tablette caisson p008"],
                         ["Fond", "Fond p001"],
                         ["Porte", "Porte p"],
                         ["Tiroir", "Tiroir p"]
@@ -88,16 +88,16 @@ class TestFreeCADRPCServer(unittest.TestCase):
         self.assertNotIn("error", res)
 
         tree = res["result"]
-        self.assertEqual(len(tree["objects"]), 13)
+        self.assertEqual(len(tree["objects"]), 18)
         names = [obj["name"] for obj in tree["objects"]]
         self.assertIn("Tv_inf_p", names)
         self.assertIn("Fond_p", names)
 
-    # def Fondt_found(self):
-    #     """Test de la Fondtion d'erreur sur une méthode inexistante."""
-    #     res = rpc_call("Fondnvalide_method")
-    #     self.assertIn("error", res)
-    #     self.assertEqual(res["error"]["code"], -32601)
+    def test_04_method_not_found(self):
+        """Test de la Fondtion d'erreur sur une méthode inexistante."""
+        res = rpc_call("invalide_method")
+        self.assertIn("error", res)
+        self.assertEqual(res["error"]["code"], -32601)
 
     # def test_05_update_non_existing_object(self):
     #     """Test d'erreur lors de la modification d'un objet introuvable."""
