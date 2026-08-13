@@ -34,7 +34,7 @@ TOOL_META = {
 }
 
 def run(object_label: str, value: float, user_confirmation: bool = False) -> dict:
-    print(f"move_object object_label: {object_label}, value: {value}, user_confirmation: {user_confirmation} ")
+    # print(f"move_object object_label: {object_label}, value: {value}, user_confirmation: {user_confirmation} ")
     # 1. Vérification sécurisée de l'existence de l'objet
     objs = FreeCAD.ActiveDocument.getObjectsByLabel(object_label)
     if not objs:
@@ -45,7 +45,7 @@ def run(object_label: str, value: float, user_confirmation: bool = False) -> dic
     obj_box = find_additive_box(parent_obj)
     tag_prop = getObjTag(obj_box)
 
-    msgCsl(tag_prop["type"][-1])
+    # msgCsl(tag_prop["type"][-1])
     if int(tag_prop["type"][-1]) != 2:
         raise ValueError("L'objet n'est pas déplaçable: l'objet n'est pas valide")
 
