@@ -28,8 +28,8 @@ def rpc_call(method: str, params: list = None):
 class TestFreeCADRPCServer(unittest.TestCase):
 
     func_obj_list = [
-                        ["Montant", "Mt i p002"],
-                        ["Tablette", "Tablette caisson p008"],
+                        ["Montant", "Mt i p001"],
+                        ["Tablette", "Tablette caisson p004"],
                         ["Fond", "Fond p001"],
                         ["Porte", "Porte p"],
                         ["Tiroir", "Tiroir p"]
@@ -59,7 +59,7 @@ class TestFreeCADRPCServer(unittest.TestCase):
         self.assertEqual(result["status"], "success")
 
     def test_lier_objets(self):
-        res = rpc_call("lier_objets", [["Mt i p002", "Tablette caisson p001", "Tablette caisson p002"]])
+        res = rpc_call("lier_objets", [["Mt i p001", "Tablette caisson p001", "Tablette caisson p002"]])
         result = res["result"]
         self.assertEqual(result["message"], "Liaison des 3 objets effectuée")
         self.assertEqual(result["status"], "success")

@@ -4,15 +4,15 @@
   "parameters": {
     "object_label": {
       "type": "str",
-      "description": "L'étiquette (label) de l'élément à déplacer"
+      "description": "[1er argument - OBLIGATOIRE EN PREMIER] L'étiquette (label) de l'élément à déplacer"
     },
     "value": {
       "type": "float",
-      "description": "Indique le déplacement à effecture. La veleur sera ajoutée à la position de l'élément."
+      "description": "[2ème argument] Indique le déplacement à effectuer. La valeur est relative, elle sera ajoutée à la position de l'élément."
     },
     "user_confirmation": {
       "type": "bool",
-      "description": "Indique si l'utilisateur à confirmer d'écraser la formule"
+      "description": "[3ème argument - OBLIGATOIRE EN DERNIER] Indique si l'utilisateur a confirmé d'écraser la formule"
     }
   }
 }
