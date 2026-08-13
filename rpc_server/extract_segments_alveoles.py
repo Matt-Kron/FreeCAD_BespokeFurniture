@@ -1,6 +1,7 @@
 import json
 import sys
 import FreeCAD as App
+from collections import defaultdict
 
 from ..lib_menuiserie import get_parent_part
 
@@ -609,6 +610,32 @@ def update_meuble_simplifie(doc):
 
     # Tri des alvéoles par ID de façon naturelle (A1, A2, B1, B2...)
     alveoles_list.sort(key=lambda x: (len(x['id']), x['id']))
+
+    # Réindexer les numéros dans chaque colonne pour qu'ils soient consécutifs
+    def get_letter_prefix(alveole_id):
+        """Extrait la partie lettre de l'ID (ex: 'AA1' -> 'AA', 'B2' -> 'B')"""
+        letters = []
+        for c in alveole_id:
+            if c.isalpha():
+                letters.append(c)
+            else:
+                break
+        return ''.join(letters)
+
+    # Regrouper par préfixe lettre (ex: 'A', 'AA', 'B')
+    groups = defaultdict(list)
+    for alveole in alveoles_list:
+        letter_prefix = get_letter_prefix(alveole['id'])
+        groups[letter_prefix].append(alveole)
+
+    # Pour chaque colonne, trier par hauteur et réattribuer les numéros
+    for letter_prefix in groups:
+        group_alveoles = sorted(groups[letter_prefix], key=lambda a: a['position'][vert_axis_idx])
+        for new_row_num, alveole in enumerate(group_alveoles, start=1):
+            alveole['id'] = f"{letter_prefix}{new_row_num}"
+
+    # Retri final pour garantir l'ordre AA1, AA2, A1, A2, B1, B2...
+    alveoles_list.sort(key=lambda x: (x['id'],))
 
     # 8. Préparation des données JSON de sortie
     segments_json = []

@@ -107,7 +107,7 @@ def create_geometry_in_container(doc):
 
             line_obj = doc.addObject("Part::Feature", internal_name)
             line_obj.Shape = line_shape
-            line_obj.Label = s_nom
+            line_obj.Label = f"Segment {s_nom}"
 
             # Ranger l'objet dans le App::Part
             meuble_part.addObject(line_obj)

@@ -61,6 +61,7 @@ def run(object_label: str, value: float, user_confirmation: bool = False) -> dic
             break
     if not status == "user_request":
         position = getattr(parent_obj.Placement.Base, axis)
+        parent_obj.setExpression("Placement.Base." + axis, None)
         setattr(parent_obj.Placement.Base, axis, position + value)
         status = "success"
 

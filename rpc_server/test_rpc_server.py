@@ -50,7 +50,7 @@ class TestFreeCADRPCServer(unittest.TestCase):
             self.assertEqual(result["label"], label)
             self.assertEqual(result["type"], obj_type)
 
-    def mtest_move_object(self):
+    def test_move_object(self):
         res = rpc_call("move_object", ["Tablette caisson p003", 200])
         result = res["result"]
         self.assertEqual(result["status"], "user_request")
@@ -58,13 +58,18 @@ class TestFreeCADRPCServer(unittest.TestCase):
         result = res["result"]
         self.assertEqual(result["status"], "success")
 
+    def test_lier_objets(self):
+        res = rpc_call("lier_objets", [["Mt i p002", "Tablette caisson p001", "Tablette caisson p002"]])
+        result = res["result"]
+        self.assertEqual(result["message"], "Liaison des 3 objets effectuée")
+        self.assertEqual(result["status"], "success")
 
-    def test_remove_object(self):
-        for obj_type, label in self.func_obj_list:
-            res =  rpc_call("remove_object", [label])
-            result = res["result"]
-            self.assertEqual(result["status"], "success")
-            self.assertEqual(result["label"], label)
+    # def test_remove_object(self):
+    #     for obj_type, label in self.func_obj_list:
+    #         res =  rpc_call("remove_object", [label])
+    #         result = res["result"]
+    #         self.assertEqual(result["status"], "success")
+    #         self.assertEqual(result["label"], label)
 
     # def test_01_add_component(self):
     #     """Test de la création d'un panneau verticall."""

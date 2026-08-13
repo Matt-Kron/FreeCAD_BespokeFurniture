@@ -1,0 +1,14 @@
+{
+  "name": "set_alveole_role",
+  "description": "Modifie le rôle d'une alvéole pour guider la conception. Exemple: penderie, bandes dessinées, livres de poche, vêtements...",
+  "parameters": {
+    "alveole_id": {
+      "type": "str",
+      "description": "Identifiant de l'alvéole, de type D3, lettre + indice"
+    },
+    "role": {
+      "type": "str",
+      "description": "La fonction de l'alvéole, le rôle du compartiment"
+    }
+  }
+}

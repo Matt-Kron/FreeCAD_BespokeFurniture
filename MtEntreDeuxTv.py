@@ -1,6 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets, QtCore, QtGui
+from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
 
 # Paramètres de persistance
 PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/MtEntreDeuxTv"
@@ -9,19 +10,19 @@ PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/MtEntreDeuxTv"
 # FONCTIONS DE RECHERCHE DANS L'ARBORESCENCE
 # =============================================================================
 
-def get_parent_part(obj):
-    """Remonte l'arborescence pour trouver le App::Part parent d'un objet."""
-    current = obj
-    # On remonte tant qu'on n'est pas sur une Part et qu'il y a un parent
-    while current and current.TypeId != "App::Part":
-        # Vérification des parents via InList (objets qui contiennent cet objet)
-        parents = current.InList
-        if not parents:
-            break
-        # On prend le premier parent trouvé (généralement le conteneur direct)
-        current = parents[0]
+# def get_parent_part(obj):
+#     """Remonte l'arborescence pour trouver le App::Part parent d'un objet."""
+#     current = obj
+#     # On remonte tant qu'on n'est pas sur une Part et qu'il y a un parent
+#     while current and current.TypeId != "App::Part":
+#         # Vérification des parents via InList (objets qui contiennent cet objet)
+#         parents = current.InList
+#         if not parents:
+#             break
+#         # On prend le premier parent trouvé (généralement le conteneur direct)
+#         current = parents[0]
 
-    return current if current and current.TypeId == "App::Part" else None
+#     return current if current and current.TypeId == "App::Part" else None
 
 def find_box_with_properties(part_obj):
     """Cherche l'objet interne (souvent une Box) possédant les propriétés métier."""
@@ -210,21 +211,35 @@ def apply_assignments(m_name, r1_name, r2_name, p_type):
         return True
     except: return False
 
-def run_assignment_macro(force_ui=None):
+def run_assignment_macro(force_ui=None, labels=None):
     params = App.ParamGet(PARAM_GROUP)
     pref_show = params.GetBool("AlwaysShowDialog", True)
-    show_ui = force_ui if force_ui is not None else pref_show
-
-    # --- LOGIQUE DE RÉSOLUTION DES PARENTS ---
-    sel = Gui.Selection.getSelection()
-    resolved_parts = []
-    seen_names = set()
-
-    for obj in sel:
-        parent = get_parent_part(obj)
-        if parent and parent.Name not in seen_names:
-            resolved_parts.append(parent)
-            seen_names.add(parent.Name)
+    
+    # Si des labels sont fournis, on les utilise et on désactive l'UI
+    if labels is not None:
+        show_ui = False
+        doc = App.ActiveDocument
+        resolved_parts = []
+        seen_names = set()
+        for label in labels:
+            objs = doc.getObjectsByLabel(label)
+            if objs:
+                obj = objs[0]
+                parent = get_parent_part(obj)
+                if parent and parent.Name not in seen_names:
+                    resolved_parts.append(parent)
+                    seen_names.add(parent.Name)
+    else:
+        show_ui = force_ui if force_ui is not None else pref_show
+        # Logique existante avec la sélection
+        sel = Gui.Selection.getSelection()
+        resolved_parts = []
+        seen_names = set()
+        for obj in sel:
+            parent = get_parent_part(obj)
+            if parent and parent.Name not in seen_names:
+                resolved_parts.append(parent)
+                seen_names.add(parent.Name)
 
     # Identification auto basée sur les parents résolus
     m_name, m_type, r1_name, r2_name = None, None, None, None

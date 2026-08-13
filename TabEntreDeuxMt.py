@@ -1,6 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets, QtCore, QtGui
+from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
 
 # Nom du groupe de paramètres pour la persistance
 PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/TabEntreDeuxMt"
@@ -9,14 +10,14 @@ PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/TabEntreDeuxMt"
 # FONCTIONS DE RÉSOLUTION D'ARBORESCENCE (INDÉPENDANCE DU CLIC)
 # =============================================================================
 
-def get_parent_part(obj):
-    """Remonte l'arborescence pour trouver le App::Part parent."""
-    current = obj
-    while current and current.TypeId != "App::Part":
-        parents = current.InList
-        if not parents: break
-        current = parents[0]
-    return current if current and current.TypeId == "App::Part" else None
+# def get_parent_part(obj):
+#     """Remonte l'arborescence pour trouver le App::Part parent."""
+#     current = obj
+#     while current and current.TypeId != "App::Part":
+#         parents = current.InList
+#         if not parents: break
+#         current = parents[0]
+#     return current if current and current.TypeId == "App::Part" else None
 
 def find_additive_box(parent_obj):
     """
@@ -205,20 +206,35 @@ def apply_assignments(t_name, g_name, d_name, schema):
         App.Console.PrintError(f"Erreur : {str(e)}\n")
         return False
 
-def run_assignment_macro(force_ui=None):
+def run_assignment_macro(force_ui=None, labels=None):
     params = App.ParamGet(PARAM_GROUP)
     pref_show = params.GetBool("AlwaysShowDialog", True)
-    show_ui = force_ui if force_ui is not None else pref_show
-
-    # Résolution des parents App::Part
-    sel = Gui.Selection.getSelection()
-    resolved = []
-    seen = set()
-    for obj in sel:
-        p = get_parent_part(obj)
-        if p and p.Name not in seen:
-            resolved.append(p)
-            seen.add(p.Name)
+    
+    # Si des labels sont fournis, on les utilise et on désactive l'UI
+    if labels is not None:
+        show_ui = False
+        doc = App.ActiveDocument
+        resolved = []
+        seen = set()
+        for label in labels:
+            objs = doc.getObjectsByLabel(label)
+            if objs:
+                obj = objs[0]
+                p = get_parent_part(obj)
+                if p and p.Name not in seen:
+                    resolved.append(p)
+                    seen.add(p.Name)
+    else:
+        show_ui = force_ui if force_ui is not None else pref_show
+        # Résolution des parents App::Part
+        sel = Gui.Selection.getSelection()
+        resolved = []
+        seen = set()
+        for obj in sel:
+            p = get_parent_part(obj)
+            if p and p.Name not in seen:
+                resolved.append(p)
+                seen.add(p.Name)
 
     # Détection auto
     t_name, schema, g_name, d_name = None, None, None, None
