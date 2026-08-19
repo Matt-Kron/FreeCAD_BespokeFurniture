@@ -1,12 +1,26 @@
 import FreeCAD
 
 from FreeCAD_BespokeFurniture import add_object_lib
+from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator_by_labels
 from add_object_lib import addObjectPartBodyBox
 
 # Descripteur
 TOOL_META = {
         "name": "add_object",
-        "description": """Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir).""",
+        "description": """Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir, Fond), relié à plusieurs autres composants.
+                Un composant doit être ajouter à un sous-ensemble de type Caisson.
+                Le composant doit être relié à d'autres composants:
+                    un montant est relié à 2 traverses ou tablettes,
+                    une tablette ou traverse est reliée à 2 montants,
+                    Une porte, un tiroir ou un fond est reliée à 4 objets qui l'encadrent: 2 montants et 2 traverses
+                Exemple pour un montant:
+                    object_type = Montant
+                    parent_obj_label = Caisson
+                    labels = ["Tv inf p", "Tablette caisson p"]
+                Exemple pour un fond:
+                    object_type = Fond
+                    parent_obj_label = Caisson
+                    labels = ["Tv inf p", "Tablette caisson p", "Mt g p", "Mt i p"]""",
         "parameters": {
             "object_type": {
                 "type": "str",
@@ -17,8 +31,20 @@ TOOL_META = {
                 "type": "str",
                 "default": "Caisson",
                 "description": "Label de l'objet parent dans l'arbre FreeCAD"
+            },
+            "labels": {
+                "type": "list[str]",
+                "description": "Liste des labels des objets FreeCAD à lier (3 ou 5 objets requis)"
             }
         }
+}
+
+MAP_OBJECT_TYPE_LINKED_OBJECTS = {
+    "Montant": ["Tv inf p", "Tv sup p"],
+    "Tablette": ["Mt g p", "Mt d p"],
+    "Porte": ["Tv inf p", "Tv sup p", "Mt g p", "Mt d p"],
+    "Tiroir": ["Tv inf p", "Tv sup p", "Mt g p", "Mt d p"],
+    "Fond": ["Tv inf p", "Tv sup p", "Mt g p", "Mt d p"]
 }
 
 # Dictionnaire des structures dftStruct pour chaque fichier Ajouter_*
@@ -95,14 +121,21 @@ DFT_STRUCT_MAP = {
     ),
 }
 
-def run(object_type: str, parent_obj_label: str = "Caisson") -> dict:
+def run(object_type: str, parent_obj_label: str = "Caisson", labels: list[str] = []) -> dict:
 
-    part = addObjectPartBodyBox(DFT_STRUCT_MAP[object_type], FreeCAD.ActiveDocument, parent_obj_label)
+    part = addObjectPartBodyBox(DFT_STRUCT_MAP[object_type], FreeCAD.ActiveDocument, "Caisson")
+    if labels and part:
+        labels.append(part.Label)
+        print(f"add_object: run_orchestrator_by_labels {labels} ")
+        run_orchestrator_by_labels(labels)
+
+    linked_labels = labels if labels else MAP_OBJECT_TYPE_LINKED_OBJECTS[object_type]
 
     return {
         "status": "success",
         "label": part.Label,
-        "type": object_type
+        "type": object_type,
+        "links": f"object linked to "
         # "dimensions": [obj.Length.Value, obj.Width.Value, obj.Height.Value],
         # "position": [x, y, z]
     }

@@ -4,7 +4,7 @@ import FreeCAD as App
 import Part
 
 # Importer la fonction de mise à jour depuis extract_segments_alveoles
-from .extract_segments_alveoles import update_meuble_simplifie, JSON_CONTAINER_NAME
+from FreeCAD_BespokeFurniture.rpc_server.extract_segments_alveoles import update_meuble_simplifie, JSON_CONTAINER_NAME
 
 
 def sanitize_name(name):

@@ -1,6 +1,6 @@
 {
   "name": "add_object",
-  "description": "Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir).",
+  "description": "Ajoute un composant de meuble dans FreeCAD (Montant, Tablette, Porte, Tiroir, Fond), relié à plusieurs autres composants.\n                Un composant doit être ajouter à un sous-ensemble de type Caisson.\n                Le composant doit être relié à d'autres composants:\n                    un montant est relié à 2 traverses ou tablettes,\n                    une tablette ou traverse est reliée à 2 montants,\n                    Une porte, un tiroir ou un fond est reliée à 4 objets qui l'encadrent: 2 montants et 2 traverses\n                Exemple pour un montant:\n                    object_type = Montant\n                    parent_obj_label = Caisson\n                    labels = [\"Tv inf p\", \"Tablette caisson p\"]\n                Exemple pour un fond:\n                    object_type = Fond\n                    parent_obj_label = Caisson\n                    labels = [\"Tv inf p\", \"Tablette caisson p\", \"Mt g p\", \"Mt i p\"]",
   "parameters": {
     "object_type": {
       "type": "str",
@@ -17,6 +17,10 @@
       "type": "str",
       "default": "Caisson",
       "description": "Label de l'objet parent dans l'arbre FreeCAD"
+    },
+    "labels": {
+      "type": "list[str]",
+      "description": "Liste des labels des objets FreeCAD à lier (3 ou 5 objets requis)"
     }
   }
 }

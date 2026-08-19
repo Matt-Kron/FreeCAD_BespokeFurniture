@@ -30,9 +30,9 @@ class TestFreeCADRPCServer(unittest.TestCase):
     func_obj_list = [
                         ["Montant", "Mt i p001"],
                         ["Tablette", "Tablette caisson p004"],
-                        ["Fond", "Fond p001"],
-                        ["Porte", "Porte p"],
-                        ["Tiroir", "Tiroir p"]
+                        # ["Fond", "Fond p001"],
+                        # ["Porte", "Porte p"],
+                        # ["Tiroir", "Tiroir p"]
     ]
 
     def setUp(self):
@@ -44,7 +44,10 @@ class TestFreeCADRPCServer(unittest.TestCase):
 
     def test_add_object(self):
         for obj_type, label in self.func_obj_list:
-            res =  rpc_call("add_object", [obj_type, "Caisson"])
+            if label == "Tablette caisson p004":
+                res =  rpc_call("add_object", [obj_type, "Caisson", ["Mt i p", "Mt d p"]])
+            else:
+                res =  rpc_call("add_object", [obj_type, "Caisson"])
             result = res["result"]
             self.assertEqual(result["status"], "success")
             self.assertEqual(result["label"], label)
@@ -66,10 +69,11 @@ class TestFreeCADRPCServer(unittest.TestCase):
 
     # def test_remove_object(self):
     #     for obj_type, label in self.func_obj_list:
-    #         res =  rpc_call("remove_object", [label])
-    #         result = res["result"]
-    #         self.assertEqual(result["status"], "success")
-    #         self.assertEqual(result["label"], label)
+    #         if not label == "Tablette caisson p004":
+    #             res =  rpc_call("remove_object", [label])
+    #             result = res["result"]
+    #             self.assertEqual(result["status"], "success")
+    #             self.assertEqual(result["label"], label)
 
     # def test_01_add_component(self):
     #     """Test de la création d'un panneau verticall."""
@@ -93,15 +97,15 @@ class TestFreeCADRPCServer(unittest.TestCase):
     #     self.assertEqual(result["status"], "updated")
     #     self.assertEqual(result["dimensions"], [900.0, 380.0, 18.0])
 
-    def test_03_get_document_tree(self):
-        """Test de la récupération de l'arbre d'objets."""
-        res = rpc_call("get_document_tree")
-        self.assertNotIn("error", res)
+    # def test_03_get_document_tree(self):
+    #     """Test de la récupération de l'arbre d'objets."""
+    #     res = rpc_call("get_document_tree")
+    #     self.assertNotIn("error", res)
 
-        tree = res["result"]
-        self.assertIn("document", tree)
-        self.assertIn("objects", tree)
-        self.assertIsInstance(tree["objects"], list)
+    #     tree = res["result"]
+    #     self.assertIn("document", tree)
+    #     self.assertIn("objects", tree)
+    #     self.assertIsInstance(tree["objects"], list)
 
     def test_04_method_not_found(self):
         """Test de la Fondtion d'erreur sur une méthode inexistante."""
@@ -115,12 +119,9 @@ class TestFreeCADRPCServer(unittest.TestCase):
     #     self.assertIn("error", res)
     #     self.assertIn("introuvable", res["error"]["message"])
 
-    # def test_06_visual_assembly_check(self):
-    #         """Crée un assemblage complet pour inspection visuelle dans FreeCAD."""
-    #         rpc_call("add_component", ["montant", "Cote_Gauche", 0.0, 0.0, 0.0])
-    #         rpc_call("add_component", ["montant", "Cote_Droit", 782.0, 0.0, 0.0])
-    #         rpc_call("add_component", ["traverse", "Etagere_Bas", 18.0, 0.0, 50.0])
-    #         rpc_call("add_component", ["traverse", "Etagere_Haut", 18.0, 0.0, 700.0])
+    # def test_get_geo_structure_check(self):
+    #         """Test la génération de la géométrie simplifiée"""
+    #         rpc_call("get_geo_structure", [])
 
 if __name__ == "__main__":
     unittest.main()

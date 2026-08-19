@@ -269,7 +269,7 @@ def create_alveole_annotations(doc, alveoles_list, json_container):
             json_container.addObject(text_obj)
 
             # Configurer le label
-            text_obj.Label = f"Alvéole {alveole_id}"
+            text_obj.Label = f"Nom alvéole {alveole_id}"
 
             # Style visuel
             if App.GuiUp and text_obj.ViewObject:
@@ -359,14 +359,26 @@ def update_meuble_simplifie(doc):
         profondeur = bbox.YLength
         hauteur = bbox.ZLength
 
+        liaisons = []
+        print(f"update_meuble_simplifie obj {obj.Label} ")
         if is_vertical:
             debut = [pos_x, pos_y, pos_z]
             fin = [pos_x, pos_y, pos_z + hauteur]
             role = "vertical"
+            if hasattr(obj, "obj_dessous"):
+                liaisons.append(obj.obj_dessous.Label)
+            if hasattr(obj, "obj_dessus"):
+                liaisons.append(obj.obj_dessus.Label)
+            epaisseur = largeur
         else:  # is_horizontal
             debut = [pos_x, pos_y, pos_z]
             fin = [pos_x + largeur, pos_y, pos_z]
             role = "horizontal"
+            if hasattr(obj, "obj_gauche"):
+                liaisons.append(obj.obj_gauche.Label)
+            if hasattr(obj, "obj_droit"):
+                liaisons.append(obj.obj_droit.Label)
+            epaisseur = hauteur
 
         segments_list.append({
             "nom": parent_label,
@@ -375,7 +387,9 @@ def update_meuble_simplifie(doc):
             "fin": fin,
             "largeur": largeur,
             "profondeur": profondeur,
-            "hauteur": hauteur
+            "hauteur": hauteur,
+            "epaisseur": epaisseur,
+            "liaisons": liaisons
         })
 
     App.Console.PrintMessage(f"-> Extraits {len(segments_list)} panneaux (montants verticaux et traverses horizontales).\n")
@@ -643,7 +657,9 @@ def update_meuble_simplifie(doc):
         segments_json.append({
             "nom": s["nom"],
             "debut": s["debut"],
-            "fin": s["fin"]
+            "fin": s["fin"],
+            "epaisseur": s["epaisseur"],
+            "liaisons": s["liaisons"]
         })
 
     new_output_data = {

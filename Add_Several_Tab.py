@@ -160,35 +160,9 @@ class ShelfDialog(QtWidgets.QDialog):
             else:
                 self.ui.absolutePosition.setChecked(True)
 
-        # Configurer les modèles pour les QTableView
-        # self.param_model = QtGui.QStandardItemModel()
-        # self.param_model.setHorizontalHeaderLabels(["Propriété", "Valeur"])
-        # self.param_table_view.setModel(self.param_model)
-        # self.param_table_view.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        # self.param_table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        # self.param_table_view.selectionModel().selectionChanged.connect(self.on_param_selection_changed)
-
-        # self.panel_model = QtGui.QStandardItemModel()
-        # self.panel_model.setHorizontalHeaderLabels(["Nom abrégé", "Épaisseur (mm)"])
-        # self.panel_table_view.setModel(self.panel_model)
-        # self.panel_table_view.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        # self.panel_table_view.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        # self.panel_table_view.selectionModel().selectionChanged.connect(self.on_panel_selection_changed)
-
-        # Remplir les modèles
-        # self.fill_param_model()
-        # self.fill_panel_model()
-
         # Configurer les boutons
         self.ok_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
-
-        # Configurer les montants
-        # obj1, obj2 = get_selected_objects()
-        # if self.obj1.TypeId != "App::Part":
-        #     obj1_p = get_parent_part(self.obj1)
-        # if self.obj2.TypeId != "App::Part":
-        #     obj2_p = get_parent_part(self.obj2)
 
         # setup external parts labels
         if self.mode[0] == "V":
@@ -218,8 +192,6 @@ class ShelfDialog(QtWidgets.QDialog):
         self.distribution_equidistant_no_thickness.toggled.connect(self.update_sliders)
         self.distribution_arbitrary.toggled.connect(self.update_sliders)
         self.num_shelves_spin.valueChanged.connect(self.update_sliders)
-        # self.top_thickness_check.stateChanged.connect(lambda: self.top_thickness_edit.setEnabled(self.top_thickness_check.isChecked()))
-        # self.bottom_thickness_check.stateChanged.connect(lambda: self.bottom_thickness_edit.setEnabled(self.bottom_thickness_check.isChecked()))
         self.ui.absolutePosition.toggled.connect(self.update_sliders)
         self.ui.relativePosition.toggled.connect(self.update_sliders)
         self.ui.checkBox_BackProp.toggled.connect(self.backPropToggled)
@@ -234,39 +206,6 @@ class ShelfDialog(QtWidgets.QDialog):
         # Ajouter le layout principal
         main_layout = QtWidgets.QVBoxLayout(self)
         main_layout.addWidget(self.ui)
-
-    # def fill_param_model(self):
-    #     if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Parametres'):
-    #         for prop_name in App.ActiveDocument.VarSet.Parametres.PropertiesList:
-    #             if "epaisseur" in prop_name.lower():
-    #                 prop_value = getattr(App.ActiveDocument.VarSet.Parametres, prop_name)
-    #                 item_prop = QtGui.QStandardItem(prop_name)
-    #                 item_value = QtGui.QStandardItem(f"{prop_value:.1f}")
-    #                 self.param_model.appendRow([item_prop, item_value])
-    #
-    # def fill_panel_model(self):
-    #     if hasattr(App, 'ActiveDocument') and hasattr(App.ActiveDocument, 'VarSet') and hasattr(App.ActiveDocument.VarSet, 'Liste_Panneaux'):
-    #         lines = App.ActiveDocument.VarSet.Liste_Panneaux.split('\n')
-    #         for line in lines[1:]:
-    #             if line.strip():
-    #                 parts = line.split(';')
-    #                 if len(parts) >= 5:
-    #                     nom_abrege = parts[0]
-    #                     try:
-    #                         epaisseur = float(parts[4])
-    #                         item_nom = QtGui.QStandardItem(nom_abrege)
-    #                         item_epaisseur = QtGui.QStandardItem(f"{epaisseur:.1f}")
-    #                         self.panel_model.appendRow([item_nom, item_epaisseur])
-    #                     except ValueError:
-    #                         continue
-
-    # def on_param_selection_changed(self, selected, deselected):
-    #     if selected.indexes():
-    #         self.panel_table_view.selectionModel().clearSelection()
-    #
-    # def on_panel_selection_changed(self, selected, deselected):
-    #     if selected.indexes():
-    #         self.param_table_view.selectionModel().clearSelection()
 
     def update_sliders(self):
         previous_shelves_number = len(self.objects)
@@ -483,7 +422,7 @@ def add_shelves(shelf_positions):
         t_part.Placement.Base.z = pos
 
 
-def main():
+def main(gui_mode: bool = True):
     selection = Gui.Selection.getSelection()
     ''' mode definition
         V for vertical duplicated objects, shelves
@@ -515,7 +454,7 @@ def main():
                     msgCsl(f"{obj.Label}, obj1 = {obj1.Label}, obj2 = {obj2.Label}")
                     break
 
-    if len(selection) == 2: # and not int(mode[1]):
+    if len(selection) == 2 and not duplicate: # and not int(mode[1]):
         obj1, obj2 = get_parent_part(selection[0]), get_parent_part(selection[1])
         class_obj1 = classify_object(obj1)
         class_obj2 = classify_object(obj2)
@@ -524,9 +463,6 @@ def main():
         if class_obj1["is_ext_H"] and class_obj2["is_ext_H"]:
             mode = "V0"
         msgCsl(f"{__name__} obj1 = {obj1.Label}, obj2 = {obj2.Label}")
-    # obj1, obj2 = get_selected_objects()
-    # if not obj1 or not obj2:
-    #     return
 
     if obj1 and obj2:
         min_height = get_min_height(obj1, obj2, mode[0])
@@ -536,10 +472,9 @@ def main():
 
         dialog = ShelfDialog(min_height, obj1, obj2, mode = mode, duplicate = duplicate)
         dialog.show()
-        # if dialog.exec() == QtWidgets.QDialog.Accepted:
-        #     shelf_positions = dialog.get_shelf_positions()
-        #     add_shelves(shelf_positions)
+
     else:
         userMsg("No valid selection.")
 
-main()
+if __name__ == "__main__":
+    main(gui_mode = True)

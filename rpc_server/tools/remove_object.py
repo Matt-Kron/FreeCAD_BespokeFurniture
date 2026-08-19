@@ -6,7 +6,7 @@ TOOL_META = {
         "parameters": {
             "object_label": {
                 "type": "str",
-                "description": "l'étiquette - label - de l'objet à supprimer"
+                "description": "l'étiquette - label - de l'objet à supprimer. ne peut pas être le nom d'une alvéole, doit être le nom d'un segment interne à la structure"
             }
         }
 }

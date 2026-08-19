@@ -6,7 +6,7 @@
    width="64px"
    sodipodi:docname="MtD.svg"
    xml:space="preserve"
-   inkscape:version="1.4.3 (fcd0343856, 2026-01-01)"
+   inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -436,7 +436,13 @@
        style="fill:url(#linearGradient13-6);fill-opacity:1;stroke:#ffffff;stroke-width:1.99999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" /><path
        style="fill:#fce94f;fill-opacity:1;stroke:#2e3436;stroke-width:0.0445469;stroke-linecap:round;stroke-linejoin:round"
        d="m 3.9653087,55.898837 v -3.94844 H 32.028193 60.09106 v 3.94844 3.94843 H 32.028193 3.9653087 Z m 53.1397943,0.0295 -0.05043,-2.03315 -25.07257,-0.0299 -25.0725706,-0.0299 v 2.06303 2.06304 H 32.032452 57.155373 Z"
-       id="path2-6" /></g><metadata
+       id="path2-6" /><path
+       style="fill:#00ff00;stroke:#00ffff;stroke-width:4;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 28.538051,32 H 46.924788"
+       id="path4" /><path
+       style="fill:#00ff00;stroke:#00ffff;stroke-width:4;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       d="M 37.731421,22.80663 V 41.19337"
+       id="path5" /></g><metadata
      id="metadata3200"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><cc:license
