@@ -326,7 +326,7 @@ class ShelfDialog(QtWidgets.QDialog):
         if not self.group_index: self.group_index = getMaxShelvesIndex() + 1
         if not self.group_type:
             self.groupTypeChange()
-        obj.setTag(groupe_etageres := f"{self.group_type}{self.group_index}")
+        obj.setTag(None, None, groupe_etageres := f"{self.group_type}{self.group_index}")
         obj.temp = True
         obj.object.fond = self.backProp
         self.objects.append(obj)
@@ -454,7 +454,7 @@ def main(gui_mode: bool = True):
                     msgCsl(f"{obj.Label}, obj1 = {obj1.Label}, obj2 = {obj2.Label}")
                     break
 
-    if len(selection) == 2 and not duplicate: # and not int(mode[1]):
+    if len(selection) == 2: # and not int(mode[1]):
         obj1, obj2 = get_parent_part(selection[0]), get_parent_part(selection[1])
         class_obj1 = classify_object(obj1)
         class_obj2 = classify_object(obj2)

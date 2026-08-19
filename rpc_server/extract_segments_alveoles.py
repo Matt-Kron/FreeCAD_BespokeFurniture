@@ -280,11 +280,87 @@ def create_alveole_annotations(doc, alveoles_list, json_container):
         except Exception as e:
             App.Console.PrintWarning(f"Erreur lors de la création de l'annotation pour {alveole_id}: {e}\n")
 
+def segment_traverse_cellule(seg_tuple, cell, is_vert, tolerance=26.0):
+    """Vérifie si un segment traverse intégralement la cellule de bord à bord."""
+    u1, u2 = cell['u1'], cell['u2']
+    v1, v2 = cell['v1'], cell['v2']
+
+    if is_vert:
+        u_seg, v_min, v_max = seg_tuple
+        if u1 + tolerance < u_seg < u2 - tolerance:
+            if v_min <= v1 + tolerance and v_max >= v2 - tolerance:
+                return True, u_seg
+    else:
+        v_seg, u_min, u_max = seg_tuple
+        if v1 + tolerance < v_seg < v2 - tolerance:
+            if u_min <= u1 + tolerance and u_max >= u2 - tolerance:
+                return True, v_seg
+
+    return False, None
+
+def decomposer_cellule_recursive(cell, parent_id, vert_segs, horiz_segs, tolerance=26.0):
+    """Décompose récursivement une cellule et génère les identifiants hiérarchiques."""
+    u1, u2 = cell['u1'], cell['u2']
+    v1, v2 = cell['v1'], cell['v2']
+
+    # Découpes verticales (colonnes)
+    split_u = []
+    for s in vert_segs:
+        cuts, u_val = segment_traverse_cellule(s, cell, is_vert=True, tolerance=tolerance)
+        if cuts:
+            split_u.append(u_val)
+    split_u = group_coordinates(split_u, tolerance)
+
+    # Découpes horizontales (étagères/rangées)
+    split_v = []
+    for s in horiz_segs:
+        cuts, v_val = segment_traverse_cellule(s, cell, is_vert=False, tolerance=tolerance)
+        if cuts:
+            split_v.append(v_val)
+    split_v = group_coordinates(split_v, tolerance)
+
+    # Si aucune découpe ne traverse : cellule terminale (alvéole)
+    if not split_u and not split_v:
+        cell['id'] = parent_id
+        return [cell]
+
+    leaves = []
+
+    # Priorité aux séparations en colonnes
+    if split_u:
+        u_bounds = sorted([u1] + split_u + [u2])
+        for idx in range(len(u_bounds) - 1):
+            col_letter = col_index_to_letter(idx)
+            child_id = col_letter if not parent_id else f"{parent_id}-{col_letter}"
+            sub_cell = {'u1': u_bounds[idx], 'u2': u_bounds[idx+1], 'v1': v1, 'v2': v2}
+            leaves.extend(decomposer_cellule_recursive(sub_cell, child_id, vert_segs, horiz_segs, tolerance))
+
+    # Sinon, séparations en rangées
+    elif split_v:
+        v_bounds = sorted([v1] + split_v + [v2])
+        for idx in range(len(v_bounds) - 1):
+            row_num = idx + 1
+            if parent_id and parent_id[-1].isalpha():
+                child_id = f"{parent_id}{row_num}"
+            elif parent_id and parent_id[-1].isdigit():
+                child_id = f"{parent_id}-{row_num}"
+            else:
+                child_id = f"{row_num}"
+            sub_cell = {'u1': u1, 'u2': u2, 'v1': v_bounds[idx], 'v2': v_bounds[idx+1]}
+            leaves.extend(decomposer_cellule_recursive(sub_cell, child_id, vert_segs, horiz_segs, tolerance))
+
+    return leaves
 
 def update_meuble_simplifie(doc):
     """
     Fonction principale pour analyser le meuble et mettre à jour l'objet meuble_simplifie.
     Peut être appelée depuis d'autres scripts.
+    Description du nommage des alvéoles, exemple:
+        Soit un meuble divisé en 3 colonnes A, B, C. La colonne A est divisée par plusieurs traverses, A1, A2, A3, A4.
+        La deuxième étagère est encore divisée en 2 colonnes. Leur nom doivent être A2-A et A2-B.
+        Et si A2-A est divisée verticalement par d'autres traverses, alors on a les noms A2-A1, A2-A2... Et pour A2-B ce serait A2-B1, A2-B2...
+        On pourrait aussi avoir dans le même principe A3-A-A, A3-A-B, A3-A-C, si A3 est découpé en plusieurs colonnes et
+        que la première colonne est encore découpée en colonne.
 
     Args:
         doc: Document FreeCAD à analyser
@@ -442,104 +518,28 @@ def update_meuble_simplifie(doc):
     depth_coords = [s['debut'][depth_axis_idx] for s in segments_list] + [s['fin'][depth_axis_idx] for s in segments_list]
     w_avg = sum(depth_coords) / len(depth_coords) if depth_coords else 0.0
 
-    # 5. Extraction des découpes uniques de coordonnées candidates pour la grille
-    u_coords = []
-    for u, v_min, v_max in vert_segs:
-        u_coords.append(u)
-    for v, u_min, u_max in horiz_segs:
-        u_coords.append(u_min)
-        u_coords.append(u_max)
-
-    v_coords = []
-    for v, u_min, u_max in horiz_segs:
-        v_coords.append(v)
-    for u, v_min, v_max in vert_segs:
-        v_coords.append(v_min)
-        v_coords.append(v_max)
-
     TOLERANCE = 26.0 # Tolérance de 26mm pour compenser les micro-écarts CAO
 
-    u_candidates = group_coordinates(u_coords, TOLERANCE)
-    v_candidates = group_coordinates(v_coords, TOLERANCE)
+    # 5. Décomposition hiérarchique récursive
+    all_u = [s['debut'][horiz_axis_idx] for s in segments_list] + [s['fin'][horiz_axis_idx] for s in segments_list]
+    all_v = [s['debut'][vert_axis_idx] for s in segments_list] + [s['fin'][vert_axis_idx] for s in segments_list]
 
-    # 6. Algorithme de déduction des alvéoles minimales (analyse des cycles fermés)
-    cells = []
-    for i in range(len(v_candidates)):
-        for j in range(i + 1, len(v_candidates)):
-            v1 = v_candidates[i]
-            v2 = v_candidates[j]
+    root_cell = {
+        'u1': min(all_u),
+        'u2': max(all_u),
+        'v1': min(all_v),
+        'v2': max(all_v)
+    }
 
-            # Vérifier qu'il existe bien au moins un panneau aux niveaux horizontaux v1 et v2
-            any_at_v1 = any(abs(v - v1) <= TOLERANCE for v, _, _ in horiz_segs)
-            any_at_v2 = any(abs(v - v2) <= TOLERANCE for v, _, _ in horiz_segs)
-            if not (any_at_v1 and any_at_v2):
-                continue
-
-            # Identifier les montants verticaux qui chevauchent l'intervalle de hauteur (v1, v2)
-            overlapping_vert_u = []
-            for u, v_min, v_max in vert_segs:
-                if v_min < v2 - TOLERANCE and v_max > v1 + TOLERANCE:
-                    overlapping_vert_u.append(u)
-
-            if len(overlapping_vert_u) < 2:
-                continue
-
-            # Les parois d'une alvéole doivent être adjacentes dans la liste ordonnée des parois verticales
-            u_walls = group_coordinates(overlapping_vert_u, TOLERANCE)
-
-            for k in range(len(u_walls) - 1):
-                u1 = u_walls[k]
-                u2 = u_walls[k + 1]
-
-                # Vérifications de fermeture des 4 côtés :
-                # 1. Bordure basse (v1)
-                if not covers_interval(horiz_segs, v1, u1, u2, TOLERANCE):
-                    continue
-                # 2. Bordure haute (v2)
-                if not covers_interval(horiz_segs, v2, u1, u2, TOLERANCE):
-                    continue
-                # 3. Bordure gauche (u1)
-                if not covers_interval(vert_segs, u1, v1, v2, TOLERANCE):
-                    continue
-                # 4. Bordure droite (u2)
-                if not covers_interval(vert_segs, u2, v1, v2, TOLERANCE):
-                    continue
-
-                # Vérification : Aucune étagère horizontale ne doit couper l'intérieur de l'alvéole
-                if has_horizontal_crossing(v1, v2, u1, u2, horiz_segs, TOLERANCE):
-                    continue
-
-                cells.append({
-                    'u1': u1,
-                    'u2': u2,
-                    'v1': v1,
-                    'v2': v2
-                })
+    cells = decomposer_cellule_recursive(root_cell, "", vert_segs, horiz_segs, TOLERANCE)
 
     App.Console.PrintMessage(f"-> Déduites {len(cells)} alvéoles physiques.\n")
 
-    # 7. Attribution des IDs de grille et construction de l'enveloppe détaillée
-    unique_u1s = group_coordinates([cell['u1'] for cell in cells], TOLERANCE)
-    unique_v1s = group_coordinates([cell['v1'] for cell in cells], TOLERANCE)
-
-    def find_closest_index(val, val_list):
-        closest_idx = 0
-        min_diff = float('inf')
-        for idx, v in enumerate(val_list):
-            diff = abs(v - val)
-            if diff < min_diff:
-                min_diff = diff
-                closest_idx = idx
-        return closest_idx
+    # 6. Construction de l'enveloppe détaillée des alvéoles
 
     alveoles_list = []
     for cell in cells:
-        col_idx = find_closest_index(cell['u1'], unique_u1s)
-        row_idx = find_closest_index(cell['v1'], unique_v1s)
-
-        col_letter = col_index_to_letter(col_idx)
-        row_num = row_idx + 1
-        cell_id = f"{col_letter}{row_num}"
+        cell_id = cell['id']
 
         # 7a. Identification individuelle de chaque panneau de l'enveloppe
         left_name = find_boundary_segment(segments_list, True, cell['u1'], cell['v1'], cell['v2'], horiz_axis_idx, vert_axis_idx, TOLERANCE)
@@ -622,33 +622,7 @@ def update_meuble_simplifie(doc):
             "hauteur": hauteur
         })
 
-    # Tri des alvéoles par ID de façon naturelle (A1, A2, B1, B2...)
-    alveoles_list.sort(key=lambda x: (len(x['id']), x['id']))
-
-    # Réindexer les numéros dans chaque colonne pour qu'ils soient consécutifs
-    def get_letter_prefix(alveole_id):
-        """Extrait la partie lettre de l'ID (ex: 'AA1' -> 'AA', 'B2' -> 'B')"""
-        letters = []
-        for c in alveole_id:
-            if c.isalpha():
-                letters.append(c)
-            else:
-                break
-        return ''.join(letters)
-
-    # Regrouper par préfixe lettre (ex: 'A', 'AA', 'B')
-    groups = defaultdict(list)
-    for alveole in alveoles_list:
-        letter_prefix = get_letter_prefix(alveole['id'])
-        groups[letter_prefix].append(alveole)
-
-    # Pour chaque colonne, trier par hauteur et réattribuer les numéros
-    for letter_prefix in groups:
-        group_alveoles = sorted(groups[letter_prefix], key=lambda a: a['position'][vert_axis_idx])
-        for new_row_num, alveole in enumerate(group_alveoles, start=1):
-            alveole['id'] = f"{letter_prefix}{new_row_num}"
-
-    # Retri final pour garantir l'ordre AA1, AA2, A1, A2, B1, B2...
+    # Tri final naturel des alvéoles par leur identifiant hiérarchique
     alveoles_list.sort(key=lambda x: (x['id'],))
 
     # 8. Préparation des données JSON de sortie

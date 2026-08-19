@@ -7,7 +7,11 @@ TOOL_META = {
         "description": """Récupère la géométrie simplifiée du meuble du document actif.
                     Cet outil fournit l'organisation fonctionnelle du meuble, comment il est découpé en plusieurs espaces de rangements.
                     Les alvéoles sont les espaces élémentaires de rangement réels.
-                    Les segments sont la représentation simplifiée de la structure qui forme les alvéoles. C'est sur eux qu'il faut agir pour obtenir les alvéoles conformes à la demande utilisateur""",
+                    Les segments sont la représentation simplifiée de la structure qui forme les alvéoles. C'est sur eux qu'il faut agir pour obtenir les alvéoles conformes à la demande utilisateur.
+                    Description du nommage des alvéoles, exemple:
+                        Soit un meuble divisé en 3 colonnes A, B, C. La colonne A est divisée par plusieurs traverses, A1, A2, A3, A4.
+                        La deuxième étagère est encore divisée en 2 colonnes. Leurs noms doivent être A2-A et A2-B.
+                        Et si A2-A est divisée verticalement par d'autres traverses, alors on a les noms A2-A1, A2-A2... Et pour A2-B ce serait A2-B1, A2-B2...""",
         "parameters": {},
 }
 
