@@ -246,12 +246,15 @@ class ShelfDialog(QtWidgets.QDialog):
         for i in range(num_shelves):
             msgCsl(f"update_sliders max_height = {max_height}, absolute = {self.ui.absolutePosition.isChecked()}")
             position = self.getPosition(i, "update_sliders")
-            self.sliders[i].setRange(0, int(max_height))
+            self.sliders[i].setRange(0, round(max_height))
             self.sliders[i].setEnabled(self.distribution_arbitrary.isChecked())
             self.h_inputs[i].setRange(0, max_height)
-            self.sliders[i].setValue(int(position))
+            self.sliders[i].setValue(round(position))
             msgCsl(f"self.sliders[i].setValue(int(position)) {self.sliders[i].value()}")
-            self.h_inputs[i].setValue(position)
+            if self.distribution_equidistant_no_thickness.isChecked():
+                self.h_inputs[i].setValue((i + 1)/(num_shelves + 1) * max_height)
+            else:
+                self.h_inputs[i].setValue(position)
             msgCsl(f"self.h_inputs[i].setValue(position) {self.h_inputs[i].value()}")
             self.updateObjPosition(i)
             setObjTag(self.objects[i].object, groupe_etageres=self.group_type + str(self.group_index))
@@ -264,17 +267,23 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def getPosition(self, index, caller):
         msgCsl(f"getPosition caller = {caller}")
-        max_height = self.min_height if self.ui.absolutePosition.isChecked() else 100
         num_shelves = self.num_shelves_spin.value()
-        position = self.h_inputs[index].value()
+        # position = self.h_inputs[index].value()
         if self.distribution_equidistant_center.isChecked():
-            position = (index + 1) / (num_shelves + 1) * max_height
+            position = (index + 1) / (num_shelves + 1) * self.min_height - self.objects[index].thickness / 2
+            position = position if self.ui.absolutePosition.isChecked() else position / self.min_height * 100
         if self.distribution_equidistant_no_thickness.isChecked():
-            gap = (self.min_height - num_shelves * self.objects[index].thickness \
+            total_shelves_thickness = 0
+            shelves_thickness = []
+            shelves_thickness.append(0)
+            for i in range(num_shelves):
+                shelves_thickness.append(self.objects[index].thickness + total_shelves_thickness)
+                total_shelves_thickness += self.objects[index].thickness
+            gap = (self.min_height - total_shelves_thickness \
                    - self.top_thickness_check.isChecked() * float(self.top_thickness_edit.text()) \
                     - self.bottom_thickness_check.isChecked() * float(self.bottom_thickness_edit.text())) \
                     / (num_shelves + 1)
-            position = (gap * (index + 1) + self.objects[index].thickness * index)
+            position = gap * (index + 1) + shelves_thickness[index]
             position = position if self.ui.absolutePosition.isChecked() else position / self.min_height * 100
         if self.distribution_arbitrary.isChecked():
             msgCsl(f"getPosition self.objects[index].part = {self.objects[index].part.Label}")
