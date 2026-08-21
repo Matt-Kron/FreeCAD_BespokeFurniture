@@ -374,7 +374,7 @@ class ShelfDialog(QtWidgets.QDialog):
                 self.objects[index].part.setExpression(self.placementProp,
                                                        f"<<{self.heightObjRef.Label}>>{self.placementProp} "
                                                        f"+ {position / 100} * <<{find_additive_box(self.heightObjRef).Label}>>"
-                                                       f".{"Height" if self.mode[0] == "V" else "Length"}")
+                                                       f".{'Height' if self.mode[0] == 'V' else 'Length'}")
             # msgCsl(f"{__name__} position étagère {index} à {self.h_inputs[index].value() * (self.min_height/100 if self.ui.relativePosition.isChecked() else 1)}")
             msgCsl(f"{__name__} position étagère {index} à {position * (self.min_height/100 if self.ui.relativePosition.isChecked() else 1)}")
             self.objects[index].part.Document.recompute()

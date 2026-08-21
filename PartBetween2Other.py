@@ -169,9 +169,9 @@ def run_orchestrator_by_labels(labels):
         "2;0;1" : "V",
         "0;2;1" : "H"
     }
-    obj_map = f"{len([d for d in data if d["is_ext_V"] and not d["is_ambiguous_host"]])};"
-    obj_map += f"{len([d for d in data if d["is_ext_H"] and not d["is_ambiguous_host"]])};"
-    obj_map += f"{len([d for d in data if d["is_ambiguous_host"]])}"
+    obj_map = f"{len([d for d in data if d['is_ext_V'] and not d['is_ambiguous_host']])};"
+    obj_map += f"{len([d for d in data if d['is_ext_H'] and not d['is_ambiguous_host']])};"
+    obj_map += f"{len([d for d in data if d['is_ambiguous_host']])}"
     print(obj_map)
 
     if count == 3:
