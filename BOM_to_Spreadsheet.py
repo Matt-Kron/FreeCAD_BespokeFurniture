@@ -2,6 +2,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtGui, QtCore, QtWidgets
 import json, os, sys, re, subprocess
+from FreeCAD_BespokeFurniture.lib_menuiserie import BF_MACROS_PATH
 
 import platform
 
@@ -10,11 +11,10 @@ SYSTEM = platform.system()
 # --- CONFIGURATION DES CHEMINS SELON L'OS ---
 if SYSTEM == "Windows":
     PYTHON_LO = r"C:\Program Files\LibreOffice\program\python.exe"
-    # Chemin partagé pour le signal (plus besoin du dossier snap sur Windows)
     TRIGGER_PATH = os.path.join(os.environ["TEMP"], "bridge_trigger.json")
 else:
     PYTHON_LO = "soffice" # Ou le chemin vers le python de LO sur Ubuntu
-    TRIGGER_PATH = "/home/matthou/snap/freecad/common/bridge_trigger.json"
+    TRIGGER_PATH = os.path.join(BF_MACROS_PATH, "bridge_trigger.json")
 
 # --- CONFIGURATION ---
 HEADERS = {
@@ -148,38 +148,6 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         layout.addWidget(self.tree)
 
 
-
-    # --- SYNCHRO VARSET (CORRIGÉE) ---
-    # def sync_to_varset(self):
-    #     doc = App.ActiveDocument
-    #     if not doc: return
-    #     vs = doc.getObject("BOM_to_Spreadsheet") or doc.addObject("App::VarSet", "BOM_to_Spreadsheet")
-    #     for p in vs.PropertiesList:
-    #         try: vs.removeProperty(p)
-    #         except: pass
-    #
-    #     for i in range(self.model.rowCount()):
-    #         f_item = self.model.item(i)
-    #         f_grp = f"File_{i:03d}"
-    #         vs.addProperty("App::PropertyString", f"{f_grp}_Label", f_grp)
-    #         setattr(vs, f"{f_grp}_Label", str(f_item.text()))
-    #         vs.addProperty("App::PropertyString", f"{f_grp}_Path", f_grp)
-    #         setattr(vs, f"{f_grp}_Path", str(f_item.data(QtCore.Qt.UserRole) or ""))
-    #
-    #         for j in range(f_item.rowCount()):
-    #             s_item = f_item.child(j)
-    #             s_grp = f"{f_grp}_Sheet_{j:03d}"
-    #             vs.addProperty("App::PropertyString", f"{s_grp}_Label", s_grp)
-    #             setattr(vs, f"{s_grp}_Label", str(s_item.text()))
-    #
-    #             for k in range(s_item.rowCount()):
-    #                 data_item = s_item.child(k, 1)
-    #                 if data_item:
-    #                     p_name = f"{s_grp}_Plage_{k:03d}"
-    #                     vs.addProperty("App::PropertyString", p_name, s_grp)
-    #                     setattr(vs, p_name, json.dumps(data_item.data(QtCore.Qt.UserRole)))
-    #     doc.recompute()
-
     def sync_to_varset(self):
         doc = App.ActiveDocument
         if not doc: return
@@ -234,27 +202,6 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         # 3. On laisse la dernière colonne (Statut) absorber tout le reste
         # C'est ce qui empêchera la colonne 'Path' de déborder
         h.setStretchLastSection(True)
-
-    # def load_from_varset(self):
-    #     vs = App.ActiveDocument.getObject("BOM_to_Spreadsheet")
-    #     if not vs: return
-    #     self.model.clear()
-    #     self.model.setHorizontalHeaderLabels(["Structure", "Configuration", "État"])
-    #     all_p = vs.PropertiesList
-    #     for f_p in sorted([p for p in all_p if p.startswith("File_") and p.endswith("_Label") and "_Sheet_" not in p]):
-    #         grp = f_p.replace("_Label", "")
-    #         f_item = QtGui.QStandardItem(getattr(vs, f_p))
-    #         f_item.setData(getattr(vs, grp + "_Path", ""), QtCore.Qt.UserRole)
-    #         self.model.appendRow([f_item, QtGui.QStandardItem(f_item.data(QtCore.Qt.UserRole)), QtGui.QStandardItem("FILE")])
-    #         for s_p in sorted([p for p in all_p if p.startswith(grp + "_Sheet_") and p.endswith("_Label")]):
-    #             s_item = QtGui.QStandardItem(getattr(vs, s_p))
-    #             f_item.appendRow([s_item, QtGui.QStandardItem("SHEET")])
-    #             for p_p in sorted([p for p in all_p if p.startswith(s_p.replace("_Label", "") + "_Plage_")]):
-    #                 data = json.loads(getattr(vs, p_p))
-    #                 c0, c1 = QtGui.QStandardItem("📥 Plage"), QtGui.QStandardItem(f"Dest: {data['dest']}")
-    #                 c1.setData(data, QtCore.Qt.UserRole)
-    #                 s_item.appendRow([c0, c1, QtGui.QStandardItem("PRÊT")])
-    #     self.tree.expandAll()
 
     def load_from_varset(self):
         # --- AJOUTER CETTE LIGNE ---
@@ -335,34 +282,6 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         # 3. On laisse la dernière colonne (Statut) absorber tout le reste
         # C'est ce qui empêchera la colonne 'Path' de déborder
         h.setStretchLastSection(True)
-
-    # --- BIBLIOTHÈQUE ---
-    # def export_library(self, item):
-    #     # On récupère l'item de donnée (colonne 1)
-    #     idx0 = item.index().sibling(item.row(), 0)
-    #     data_item = self.model.itemFromIndex(idx0).parent().child(item.row(), 1)
-    #     data = data_item.data(QtCore.Qt.UserRole)
-    #
-    #     name, ok = QtWidgets.QInputDialog.getText(self, "💾 Sauvegarder", "Nom du réglage :")
-    #     if ok and name:
-    #         try:
-    #             # Lecture de l'existant
-    #             lib = []
-    #             if os.path.exists(self.global_json):
-    #                 with open(self.global_json, 'r', encoding='utf-8') as f:
-    #                     content = f.read()
-    #                     if content: lib = json.loads(content)
-    #
-    #             # Ajout du nouveau réglage
-    #             lib.append({"name": name, "data": data})
-    #
-    #             # Sauvegarde propre
-    #             with open(self.global_json, 'w', encoding='utf-8') as f:
-    #                 json.dump(lib, f, indent=4)
-    #
-    #             App.Console.PrintMessage(f"✅ Réglage '{name}' ajouté à la bibliothèque.\n")
-    #         except Exception as e:
-    #             App.Console.PrintError(f"❌ Erreur export biblio : {str(e)}\n")
 
     def format_instruction_summary(self, data):
         """ Génère le résumé : Dest | Plage Source | Nb Col | Filtres """
@@ -478,7 +397,7 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
         idx0 = item.index().sibling(item.row(), 0)
         node = self.model.itemFromIndex(idx0)
         data = node.data(QtCore.Qt.UserRole)
-        
+
         sheet_item = node.parent()
         file_item = sheet_item.parent()
         file_data = file_item.data(QtCore.Qt.UserRole)
@@ -527,13 +446,13 @@ class BOMToSpreadsheet(QtWidgets.QDialog):
                             row_vals.append("") # Colonne demandée absente du BOM
                     rows_to_export.append(row_vals)
 
-    
+
             # 3. CRÉATION DU SCRIPT INVISIBLE (Spécifique pour Windows 11)
             if SYSTEM == "Windows":
                 script_transfert = os.path.join(os.environ["TEMP"], "lo_transfert.py")
                 # Correction de l'URL pour Windows (indispensable pour la comparaison)
                 file_url = "file:///" + os.path.abspath(file_path).replace("\\", "/")
-                
+
                 content = f"""
 import uno
 import json
@@ -546,9 +465,9 @@ def export():
         context = resolver.resolve("uno:socket,host=localhost,port=2002;urp;StarOffice.ComponentContext")
     except:
         return # LO n'est pas en écoute
-        
+
     desktop = context.ServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", context)
-    
+
     # --- STRATÉGIE DE CONNEXION AU DOCUMENT ACTIF ---
     doc = None
     components = desktop.getComponents().createEnumeration()
@@ -558,23 +477,23 @@ def export():
         if hasattr(c, "URL") and (c.URL == "{file_url}" or c.URL == "{file_url.replace(" ", "%20")}"):
             doc = c
             break
-            
+
     # Si le document n'est pas ouvert, on l'ouvre
     if doc is None:
         from com.sun.star.beans import PropertyValue
         p1 = PropertyValue()
         p1.Name = "Hidden"
         p1.Value = False
-        
+
         # CETTE PROPRIÉTÉ DIT À LIBREOFFICE D'IGNORER L'IMPRIMANTE DU DOCUMENT
         p2 = PropertyValue()
         p2.Name = "UpdateDocMode"
         p2.Value = 0 # 0 = Ne pas mettre à jour (styles, liens, imprimantes)
-        
+
         props = (p1, p2)
         #props = (PropertyValue("Hidden", 0, False, 0),)
         doc = desktop.loadComponentFromURL("{file_url}", "_blank", 0, props)
-        
+
     if not doc: return
 
     try:
@@ -585,7 +504,7 @@ def export():
     rows = {json.dumps(rows_to_export)}
     start_col = {d_col}
     start_row = {d_row}
-    
+
     # Écriture optimisée
     for i, row in enumerate(rows):
         for j, val in enumerate(row):
@@ -596,7 +515,7 @@ def export():
                 cell.setValue(float(v))
             except:
                 cell.setString(val)
-    
+
     # On ramène la fenêtre au premier plan
     frame = doc.getCurrentController().getFrame()
     frame.getContainerWindow().setFocus()
@@ -607,7 +526,7 @@ if __name__ == "__main__":
 """
                 with open(script_transfert, "w", encoding="utf-8") as f:
                     f.write(content)
-    
+
                 # Lancement SANS cacher la fenêtre et SANS attendre (plus rapide)
                 subprocess.Popen([PYTHON_LO, script_transfert])
                 App.Console.PrintMessage(f"🚀 Export vers {sheet_item.text()} envoyé.\\n")
@@ -625,7 +544,7 @@ if __name__ == "__main__":
                     f.flush()
                     os.fsync(f.fileno())
                 App.Console.PrintMessage(f"✅ [Ubuntu] Signal envoyé via {TRIGGER_PATH}\n")
-                
+
         except Exception as e:
             App.Console.PrintError(f"❌ Erreur lors de l'exécution : {str(e)}\n")
 
@@ -777,18 +696,6 @@ if __name__ == "__main__":
             self.sync_to_varset()
             self.tree.viewport().update() # Force Qt à redessiner le widget
 
-    # def add_sheet(self, file_item):
-    #     n, ok = QtWidgets.QInputDialog.getText(self, "Feuille", "Nom :")
-    #     if ok and n:
-    #         # On crée un dictionnaire pour la feuille
-    #         data = {"type": "sheet", "name": n}
-    #         si = QtGui.QStandardItem(n)
-    #         si.setData(data, QtCore.Qt.UserRole) # Important !
-    #
-    #         file_item.appendRow([si, QtGui.QStandardItem("SHEET")])
-    #         self.sync_to_varset()
-    #         self.tree.viewport().update() # Force Qt à redessiner le widget
-
     def add_sheet(self, file_item):
         # 1. Récupérer le chemin du fichier stocké dans l'item parent
         file_data = file_item.data(QtCore.Qt.UserRole)
@@ -854,6 +761,7 @@ if __name__ == "__main__":
         l = 0
         while item.parent(): l += 1; item = item.parent()
         return l
+
     def addr_to_pos(self, addr):
         m = re.match(r"([A-Z]+)([0-9]+)", addr.upper())
         if not m: return 0, 0
@@ -868,14 +776,14 @@ if __name__ == "__main__":
             lo_exe = r"C:\Program Files\LibreOffice\program\soffice.exe"
             if not os.path.exists(lo_exe):
                 lo_exe = "soffice.exe" # Tentative via le PATH global
-            
+
             # cmd = f'"{lo_exe}" --accept="socket,host=localhost,port=2002;urp;" --nologo --nodefault'
             cmd = f'"{lo_exe}" --accept="socket,host=localhost,port=2002;urp;"'
             subprocess.Popen(cmd, shell=True)
         else:
             # Commande standard pour Ubuntu / Linux
             subprocess.Popen('soffice --accept="socket,host=localhost,port=2002;urp;"', shell=True)
-        
+
         App.Console.PrintMessage(f"🚀 LibreOffice démarré en mode écoute sur {SYSTEM}.\n")
 
     def manage_library(self):
@@ -931,41 +839,11 @@ if __name__ == "__main__":
         except Exception as e:
             App.Console.PrintError(f"❌ Erreur gestion biblio : {str(e)}\n")
 
-    # def run_all(self, item):
-    #     # On détermine si on a cliqué sur un fichier ou une feuille
-    #     instructions = []
-    #
-    #     if item.data(QtCore.Qt.UserRole).get('type') == 'file':
-    #         # On récupère toutes les instructions de toutes les feuilles
-    #         for i in range(item.rowCount()):
-    #             sheet_item = item.child(i)
-    #             for j in range(sheet_item.rowCount()):
-    #                 instructions.append(sheet_item.child(j))
-    #     else:
-    #         # On récupère seulement les instructions de la feuille sélectionnée
-    #         for j in range(item.rowCount()):
-    #             instructions.append(item.child(j))
-    #
-    #     if not instructions:
-    #         App.Console.PrintWarning("Aucune instruction trouvée.\n")
-    #         return
-    #
-    #     App.Console.PrintMessage(f"⏳ Lancement de {len(instructions)} instructions...\n")
-    #
-    #     for inst in instructions:
-    #         self.run_instruction(inst)
-    #         # Petit délai pour laisser le temps au watcher de traiter le fichier
-    #         # 0.5s est généralement suffisant pour le système de fichier
-    #         import time
-    #         time.sleep(2)
-    #
-    #     App.Console.PrintMessage("✅ Toutes les instructions ont été envoyées.\n")
-
     def run_all(self, item):
         import time
         # On détermine si on a cliqué sur un fichier ou une feuille
         instructions = []
-        trigger_path = "/home/matthou/snap/freecad/common/bridge_trigger.json"
+        trigger_path = TRIGGER_PATH
 
         # 1. Collecte des instructions
         if item.data(QtCore.Qt.UserRole).get('type') == 'file':

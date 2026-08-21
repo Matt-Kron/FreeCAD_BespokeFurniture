@@ -1,11 +1,20 @@
 import os, time, json, subprocess
+from pathlib import Path
+import platform
 
-TRIGGER_FILE = "/home/matthou/snap/freecad/common/bridge_trigger.json"
-BRIDGE_SCRIPT = "/home/matthou/snap/freecad/common/bridge_calc.py"
+SYSTEM = platform.system()
+
+DIRPATH = Path(__file__).parent
+
+TRIGGER_FILE = DIRPATH / "bridge_trigger.json"
+BRIDGE_SCRIPT = DIRPATH / "bridge_calc.py"
 
 print(f"👀 Surveillant actif... (En attente sur : {TRIGGER_FILE})")
 
-subprocess.Popen('soffice --accept="socket,host=localhost,port=2002;urp;"', shell=True)
+if SYSTEM == "Windows":
+    subprocess.Popen('"C:/Program Files/LibreOffice/program/soffice.exe" --accept="socket,host=localhost,port=2002;urp;"', shell=True)
+else:
+    subprocess.Popen('soffice --accept="socket,host=localhost,port=2002;urp;"', shell=True)
 
 while True:
     if os.path.exists(TRIGGER_FILE):

@@ -1,33 +1,3 @@
-# import sys, json, os
-#
-# # --- AJOUT FORCÉ DES CHEMINS LIBREOFFICE ---
-# def add_uno_paths():
-#     extra_paths = [
-#         "/usr/lib/python3/dist-packages",
-#         "/usr/lib/libreoffice/program",
-#         "/usr/lib64/libreoffice/program" # Pour certaines distros
-#     ]
-#     for p in extra_paths:
-#         if os.path.exists(p) and p not in sys.path:
-#             sys.path.append(p)
-#
-#     # Définit les variables d'environnement requises par UNO
-#     if "/usr/lib/libreoffice/program" not in os.environ.get("PATH", ""):
-#         os.environ["PATH"] += os.pathsep + "/usr/lib/libreoffice/program"
-#
-# add_uno_paths()
-#
-# print("--- DÉBUT DU PONT ---")
-#
-# try:
-#     import uno
-#     from com.sun.star.beans import PropertyValue
-#     print("Module UNO chargé avec succès")
-# except ImportError as e:
-#     print(f"ERREUR : Module UNO introuvable. {e}")
-#     print(f"PATH actuel : {sys.path}") # Pour debug
-#     sys.exit(1)
-
 import sys, json, os
 
 # --- AJOUT DES CHEMINS (gardé pour le fonctionnement Snap/AppImage) ---

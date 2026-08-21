@@ -1,7 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets, QtCore, QtGui
-from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
+from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part, find_additive_box
 
 # Nom du groupe de paramètres pour la persistance
 PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/TabEntreDeuxMt"
@@ -9,55 +9,6 @@ PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/TabEntreDeuxMt"
 # =============================================================================
 # FONCTIONS DE RÉSOLUTION D'ARBORESCENCE (INDÉPENDANCE DU CLIC)
 # =============================================================================
-
-# def get_parent_part(obj):
-#     """Remonte l'arborescence pour trouver le App::Part parent."""
-#     current = obj
-#     while current and current.TypeId != "App::Part":
-#         parents = current.InList
-#         if not parents: break
-#         current = parents[0]
-#     return current if current and current.TypeId == "App::Part" else None
-
-def find_additive_box(parent_obj):
-    """
-    Cherche un objet de type PartDesign::AdditiveBox dans l'arborescence de parent_obj.
-    """
-    group_properties = ['Group', 'OutList', 'GroupBase', 'Elements']
-
-    for prop_name in group_properties:
-        if hasattr(parent_obj, prop_name):
-            children = getattr(parent_obj, prop_name)
-
-            if not children:
-                continue
-
-            if isinstance(children, (list, tuple)):
-                for child in children:
-                    if child.TypeId == "PartDesign::AdditiveBox":
-                        return child
-                    # Recursive search if child is a container
-                    if child.TypeId.startswith("PartDesign::Body") or \
-                       child.TypeId == "App::Part" or \
-                       child.TypeId == "App::DocumentObjectGroup":
-                        result = find_additive_box(child)
-                        if result is not None:
-                            return result
-    return None
-
-# def find_additive_box(parent_obj):
-#     """Cherche une AdditiveBox pour les propriétés de taille."""
-#     if not parent_obj: return None
-#     for child in parent_obj.OutList:
-#         if "AdditiveBox" in child.TypeId:
-#             print(f"Enfant AdditiveBox {child.Label}")
-#             return child
-#         if hasattr(child, 'Group') or child.TypeId.startswith("PartDesign::Body"):
-#             res = find_additive_box(child)
-#             if res:
-#                 print(f"Enfant AdditiveBox {res.Label}")
-#                 return res
-#     return None
 
 def find_box_with_properties(part_obj):
     """Détecte si l'objet est une Tablette et identifie son schéma de propriétés."""
@@ -209,7 +160,7 @@ def apply_assignments(t_name, g_name, d_name, schema):
 def run_assignment_macro(force_ui=None, labels=None):
     params = App.ParamGet(PARAM_GROUP)
     pref_show = params.GetBool("AlwaysShowDialog", True)
-    
+
     # Si des labels sont fournis, on les utilise et on désactive l'UI
     if labels is not None:
         show_ui = False

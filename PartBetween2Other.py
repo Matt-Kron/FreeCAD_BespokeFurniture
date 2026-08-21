@@ -9,14 +9,6 @@ from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
 # LOGIQUE DE CLASSIFICATION ET DÉTECTION
 # =============================================================================
 
-# def get_parent_part(obj):
-#     current = obj
-#     while current and current.TypeId != "App::Part":
-#         parents = current.InList
-#         if not parents: break
-#         current = parents[0]
-#     return current if current and current.TypeId == "App::Part" else None
-
 def get_box_props(part_obj):
     """
     Récupère la liste des propriétés de la box interne.
