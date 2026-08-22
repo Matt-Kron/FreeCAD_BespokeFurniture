@@ -2,22 +2,29 @@
 
 <img src="resources/Bureau3D.png" width="150"><img src="resources/bibliotheque.png" width="220"><img src="resources/cuisine.png" width="265"><img src="resources/placard_01.png" width="150"><img src="resources/sous-escalier.png" width="260"><img src="resources/Dressing_face_01.png" width="240"><img src="resources/Placard_vue_01.png" width="100"><img src="resources/SdB_portes-ouvertes_01.png" width="150"><img src="resources/coupe_placard_01.png" width="150"><img src="resources/VueOrtho01.png" width="300"><img src="resources/caisson_haut_vitre.png" width="150"><img src="resources/Dressing_vue_globale_01.png" width="150"><img src="resources/Gemini_Generated_Image.png" width="200"><img src="resources/sous-escalier_02.png" width="150">
 
-[[#Résumé]]
-[[#Commandes disponibles]]
-	[[#Caisson]]
-	[[#Ajout de composants]]
-	[[#Assemblage]]
-	[[#Utilitaires]]
-	[[#Intégration IA]]
-[[#Installation]]
+[Résumé](#résumé)
+
+[Commandes](#commandes-disponibles)
+
+- [Caisson](#caisson)
+
+- [Ajout de composants](#ajout-de-composants)
+
+- [Assemblage](#assemblage)
+
+- [Utilitaires](#utilitaires)
+
+[Intégration IA](#intégration-ia)
+
+[Installation](#installation)
 ## Résumé
 
 Un ensemble de macros pour créer un meuble paramétrique dans FreeCAD. Il s'agit de meubles fabriqués à partir de panneaux de bois, mélaminé, MDF, plaqué massif (latté chêne...), lamellé-collé... Ces panneaux sont donc de simples parallélépipèdes. On peut cependant dessiner des formes plus complexes dont les dimensions externes sont reliées à un panneau de référence (exemples à venir).
 
 A ce stade les commandes ne permettent pas de créer un modèle à partir de rien, il faut d'abord ouvrir un modèle de base (dossier ./CAD/ de ce dépôt github):
-- [[Modele_caisson_parts_FC1-1-0_v7.FCStd]]: modèle de base d'un meuble rectangulaire
-- [[Modele_caisson_pente-droite_v1-1_FC1.FCStd]]: modèle de meuble sous pente, descendant vers la droite
-- [[Modele_caisson_pente-gauche_v2.FCStd]]: modèle sous-pente, descendant vers la gauche
+- [Caisson droit](./CAD/Modele_caisson_parts_FC1-1-0_v7.FCStd): modèle de base d'un meuble rectangulaire
+- [Caisson pente droite](./CAD/Modele_caisson_pente-droite_v1-1_FC1.FCStd): modèle de meuble sous pente, descendant vers la droite
+- [Caisson pente gauche](./CAD/Modele_caisson_pente-gauche_v2.FCStd): modèle sous-pente, descendant vers la gauche
 
 La structure du modèle générique est un assemblage de conteneurs Part imbriqués. Le meuble contient un caisson, le support du caisson si besoin, les fileurs extérieurs si besoin. Le caisson contient les composants (Part + Body + Géométries).
 Un VarSet `Parametres` rassemble les paramètres globaux du meuble, ainsi que les paramètres utiles à plusieurs composants.
@@ -107,5 +114,5 @@ La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils
 ## Installation
 
 Faire un git clone dans le répertoire de Macros FreeCAD.
-La macro [[BespokeFurnitureToolbarCreation.py]] située dans `./utils/` permet de créer la barre d'outils des commandes. Pour pouvoir lancer cette macro depuis FreeCAD qui masque les sous-dossiers, et garder la synchronisation du script avec le dépôt github, il faut créer un lien symbolique dans le dossier macro qui pointe vers ce fichier. J'ai testé sur Ubuntu et Win11 (commande mklink en admin).
+La macro [BespokeFurnitureToolbarCreation.py](./utils/BespokeFurnitureToolbarCreation.py) située dans `./utils/` permet de créer la barre d'outils des commandes. Pour pouvoir lancer cette macro depuis FreeCAD qui masque les sous-dossiers, et garder la synchronisation du script avec le dépôt github, il faut créer un lien symbolique dans le dossier macro qui pointe vers ce fichier. J'ai testé sur Ubuntu et Win11 (commande mklink en admin).
 Les modèles de base sont dans le dossier CAD.
