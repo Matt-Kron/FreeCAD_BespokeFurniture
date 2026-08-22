@@ -1,8 +1,20 @@
 # FreeCAD Bespoke Furniture
 
+<img src="resources/Bureau3D.png" width="150"><img src="resources/bibliotheque.png" width="220"><img src="resources/cuisine.png" width="265"><img src="resources/placard_01.png" width="150"><img src="resources/sous-escalier.png" width="260"><img src="resources/Dressing_face_01.png" width="240"><img src="resources/Placard_vue_01.png" width="100"><img src="resources/SdB_portes-ouvertes_01.png" width="150"><img src="resources/coupe_placard_01.png" width="150"><img src="resources/VueOrtho01.png" width="300"><img src="resources/caisson_haut_vitre.png" width="150"><img src="resources/Dressing_vue_globale_01.png" width="150"><img src="resources/Gemini_Generated_Image.png" width="200"><img src="resources/sous-escalier_02.png" width="150">
+
+[[#Résumé]]
+[[#Commandes disponibles]]
+	[[#Caisson]]
+	[[#Ajout de composants]]
+	[[#Assemblage]]
+	[[#Utilitaires]]
+	[[#Intégration IA]]
+[[#Installation]]
+## Résumé
+
 Un ensemble de macros pour créer un meuble paramétrique dans FreeCAD. Il s'agit de meubles fabriqués à partir de panneaux de bois, mélaminé, MDF, plaqué massif (latté chêne...), lamellé-collé... Ces panneaux sont donc de simples parallélépipèdes. On peut cependant dessiner des formes plus complexes dont les dimensions externes sont reliées à un panneau de référence (exemples à venir).
 
-A ce stade les commandes ne permettent pas de créer un modèle à partir de rien, il faut d'abord ouvrir un modèle de base:
+A ce stade les commandes ne permettent pas de créer un modèle à partir de rien, il faut d'abord ouvrir un modèle de base (dossier ./CAD/ de ce dépôt github):
 - [[Modele_caisson_parts_FC1-1-0_v7.FCStd]]: modèle de base d'un meuble rectangulaire
 - [[Modele_caisson_pente-droite_v1-1_FC1.FCStd]]: modèle de meuble sous pente, descendant vers la droite
 - [[Modele_caisson_pente-gauche_v2.FCStd]]: modèle sous-pente, descendant vers la gauche
@@ -14,7 +26,6 @@ Un VarSet `Montants` regroupent les paramètres qui augmentent la taille des mon
 **Épaisseur des composants**
 J'ai ajouté récemment l'ajout de la propriété BOM_mat à tous les composants ajoutés, avec un panneau par défaut défini (avant, l'ajout se faisait lors de la création de la BOM, après la conception du meuble). A terme l'objectif est de modifier l'épaisseur des objets en fonction du choix du panneau. Actuellement l'épaisseur est un paramètre global, étant donné que mon usage est quasi 100% avec des panneaux de 19mm.
 En l'état, pour gérer plusieurs épaisseurs il faut créer un paramètre par nouvelle épaisseur et l'utiliser dans la propriété ad-hoc des objets concernés (Height pour des traverses, Length pour des montants...).
-
 
 ## Commandes disponibles
 
@@ -72,7 +83,8 @@ Aucun contrôle n'est fait sur les objets sélectionnés, cela peut produire des
 
 ### Intégration IA
 
-A titre expérimental j'ai relié un LLM au modèle paramétrique de meuble.
+A titre expérimental j'ai relié un LLM à ces outils de conception de meuble paramétrique. Pas pour gagner en performace car avec mes outils je vais plus vite qu'à faire des prompts qui donnent des résultats approximatifs. Intéressé par l'intégration de l'IA dans l'ingénierie, industrielle, autre que le monde du développement logiciel, j'ai voulu tester le cas de la CAO, et dans le cadre simple de la conception de meubles qui n'a pas de formes complexes.
+
 L'architecture est la suivante:
 _Scriptes python externes à FreeCAD : (autre dépôt github à créer) _
  - boite de dialogue `"Tchat"` connecté à une API Mistral ou Groq, permettant d'appeler des outils via un serveur MCP
@@ -83,7 +95,7 @@ _Scriptes python externes à FreeCAD : (autre dépôt github à créer) _
 - une macro qui génère une géométrie fonctionnelle du meuble: les cellules, alvéoles qui représentent les espaces de rangement. C'est ce qui donne au LLM la capacité de "comprendre" le meuble. Chaque cellule peut avoir un rôle, comme une penderie à chemises, ce qui permet au LLM de proposer un volume cohérent avec l'usage
 
 A ce jour je n'utilise que des plans gratuits pour accéder aux API des modèles LLM. J’atteins très vite les limites de requêtes par minute ou par jour.
-La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils, la remontée d'informations du modèle au LLM, l'optimisation du contexte envoyé à chaque prompt utilisateur.
+La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils FreeCAD à rendre accessibles, la remontée d'informations du modèle au LLM, l'optimisation du contexte envoyé à chaque prompt utilisateur.
 
 |                        Icon                         | Command                | Description                                                            |
 | :-------------------------------------------------: | :--------------------- | :--------------------------------------------------------------------- |
@@ -91,3 +103,9 @@ La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils
 |  <img src="Icons/rpc_server_stop.svg" width="32">   | Stop the RPC server    | Stop the RPC server                                                    |
 | <img src="Icons/rpc_server_restart.svg" width="32"> | Restart the RPC server | Restart the RPC server                                                 |
 |                                                     | Geo meuble             | Geométrie simplifiée du meuble, créée dans FreeCAD et transmise au LLM |
+
+## Installation
+
+Faire un git clone dans le répertoire de Macros FreeCAD.
+La macro [[BespokeFurnitureToolbarCreation.py]] située dans `./utils/` permet de créer la barre d'outils des commandes. Pour pouvoir lancer cette macro depuis FreeCAD qui masque les sous-dossiers, et garder la synchronisation du script avec le dépôt github, il faut créer un lien symbolique dans le dossier macro qui pointe vers ce fichier. J'ai testé sur Ubuntu et Win11 (commande mklink en admin).
+Les modèles de base sont dans le dossier CAD.
