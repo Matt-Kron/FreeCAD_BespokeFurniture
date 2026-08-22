@@ -2,14 +2,21 @@
 
 <img src="resources/Bureau3D.png" width="150"><img src="resources/bibliotheque.png" width="220"><img src="resources/cuisine.png" width="265"><img src="resources/placard_01.png" width="150"><img src="resources/sous-escalier.png" width="260"><img src="resources/Dressing_face_01.png" width="240"><img src="resources/Placard_vue_01.png" width="100"><img src="resources/SdB_portes-ouvertes_01.png" width="150"><img src="resources/coupe_placard_01.png" width="150"><img src="resources/VueOrtho01.png" width="300"><img src="resources/caisson_haut_vitre.png" width="150"><img src="resources/Dressing_vue_globale_01.png" width="150"><img src="resources/Gemini_Generated_Image.png" width="200"><img src="resources/sous-escalier_02.png" width="150">
 
-[[#Résumé]]
-[[#Commandes disponibles]]
-	[[#Caisson]]
-	[[#Ajout de composants]]
-	[[#Assemblage]]
-	[[#Utilitaires]]
-	[[#Intégration IA]]
-[[#Installation]]
+[Résumé](#résumé)
+
+[Commandes](#commandes-disponibles)
+
+- [Caisson](#caisson)
+
+- [Ajout de composants](#ajout-de-composants)
+
+- [Assemblage](#assemblage)
+
+- [Utilitaires](#utilitaires)
+
+- [Intégration IA](#intégration-ia)
+
+[Installation](#installation)
 ## Résumé
 
 Un ensemble de macros pour créer un meuble paramétrique dans FreeCAD. Il s'agit de meubles fabriqués à partir de panneaux de bois, mélaminé, MDF, plaqué massif (latté chêne...), lamellé-collé... Ces panneaux sont donc de simples parallélépipèdes. On peut cependant dessiner des formes plus complexes dont les dimensions externes sont reliées à un panneau de référence (exemples à venir).
