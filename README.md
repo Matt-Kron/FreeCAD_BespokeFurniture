@@ -36,25 +36,26 @@ La structure du modèle générique est un assemblage de conteneurs Part imbriqu
 Un VarSet `Parametres` rassemble les paramètres globaux du meuble, ainsi que les paramètres utiles à plusieurs composants.
 Un VarSet `Montants` regroupent les paramètres qui augmentent la taille des montants gauche et droit dans le cas où ceux-ci doivent aller jusqu'au mur du fond, au plafond, sol et découpés sur le chantier pour suivre les parois. Un décalage est également modifiable pour dépasser le caisson et recouvrir l'épaisseur des portes par exemple.
 
-Les macros d'ajout de composant et d'assemblage ne sont pas indispensables pour concevoir un meuble, elles accélèrent beaucoup le dessin. Le modèle générique de meuble est fait avec des propriétés ajoutées aux objets classiques de FreeCAD (Part, AdditiveBox... ) et des expressions qui calculent dimensions et positions à partir d'autres éléments ou de paramètres (essentiellement centralisés dans le VarSet `Parametres`). J'ai d'ailleurs commencé à faire mes meubles paramétriques sans les macros, en concevant les éléments de base paramétriques (tablette/traverse, montant, fond, tiroir, porte), en les dupliquant et en changeant manuellement les paramètres.
+Les macros d'ajout de composant et d'assemblage ne sont pas indispensables pour concevoir un meuble, elles accélèrent beaucoup son dessin. Le modèle générique de meuble est fait avec des propriétés ajoutées aux objets classiques de FreeCAD (Part, AdditiveBox... ) et des expressions qui calculent dimensions et positions à partir d'autres éléments ou de paramètres (essentiellement centralisés dans le VarSet `Parametres`). J'ai d'ailleurs commencé à faire mes meubles paramétriques sans les macros, en concevant les éléments de base paramétriques (tablette/traverse, montant, fond, tiroir, porte), en les dupliquant et en changeant manuellement les paramètres.
 
 ## Maturité et robustesse des macros
 **Remarque générale**
 Toutes les macros ont été écrites au fur et à mesure de mes besoins de productivité. Le code était au début 100% de mon jus de codeur autodidacte et pas pro du tout. Puis j'ai exploité l'IA de plus en plus, en regardant plus ou moins le code généré, selon la qualité du résultat et le temps que j'avais à relire. Même si j'avais l'envie dès le départ d'un jour partager tout ce travail, ma priorité était clairement mon usage personnel (4 ans de menuiserie dont 3 à mon compte) pour accélérer tout le processus de conception, chiffrage, préparation à la fabrication.
-Donc cela manque de factorisation, d'optimisation d'architecture, et très propablement loin des règles d'un code propre, sauf peut-être pour certaines parties assistées par IA.
+Donc cela manque de factorisation, d'optimisation d'architecture, et c'est très propablement loin des règles d'un code propre, sauf peut-être pour certaines parties assistées par IA.
 
 **Boites de dialogues**
-Quelques boites de dialogues sont soit devenues inutiles et ne sont pas encore supprimées du code (macros d'assemblage), soit mérite une refonte.
+Quelques boites de dialogues sont soit devenues inutiles et ne sont pas encore supprimées du code (macros d'assemblage), soit méritent une refonte.
 
 **Épaisseur des composants**
-J'ai ajouté récemment l'ajout de la propriété BOM_mat à tous les composants ajoutés, avec un panneau par défaut défini (avant, l'ajout se faisait lors de la création de la BOM, après la conception du meuble). A terme l'objectif est de modifier l'épaisseur des objets en fonction du choix du panneau. Actuellement l'épaisseur est un paramètre global, étant donné que mon usage est quasi 100% avec des panneaux de 19mm.
+J'ai ajouté récemment la propriété BOM_mat à tous les composants ajoutés, avec un panneau par défaut défini (avant, l'ajout se faisait lors de la création de la BOM, après la conception du meuble). A terme l'objectif est de modifier l'épaisseur des objets en fonction du choix du panneau. Actuellement l'épaisseur est un paramètre global, étant donné que mon usage est quasi 100% avec des panneaux de 19mm.
 En l'état, pour gérer plusieurs épaisseurs il faut créer un paramètre par nouvelle épaisseur et l'utiliser dans la propriété ad-hoc des objets concernés (Height pour des traverses, Length pour des montants...).
-L'épaisseur des panneaux est une épine dans le pied depuis le début, car j'ai abusé du fait que la quasi totalité des meubles sont en une seule épaisseur, pour aller vite. Le mieux c'est de l'associer au choix du matériau, mais ce qui me gêne c'est que l'épaisseur reste un paramètre qui change automatiquement en fonction du choix du panneau, sans macro, il faut repenser les objets panneaux, qui sont au moment où j'écris qu'une ligne de texte dans une propriété d'un VarSet. Peut-être en créant un objet panneau sur la base d'un VarSet.
+L'épaisseur des panneaux est une épine dans le pied depuis le début, car j'ai abusé du fait que la quasi totalité des meubles sont en une seule épaisseur, pour aller vite. Le mieux c'est de l'associer au choix du matériau, mais ce qui me gêne c'est que l'épaisseur doit rester un paramètre qui change automatiquement en fonction du choix du panneau, sans macro. Il faut donc repenser les objets panneaux, qui ne sont au moment où j'écris, qu'une ligne de texte dans une propriété d'un VarSet. Peut-être en créant un objet panneau sur la base d'un VarSet par matériau.
+
 ## Commandes disponibles
 
 ### Caisson
-Les commandes suivantes qui permettent de créer un caisson de base ne sont pas directement exploitable à ce stade. Les pièces dépendent les unes des autres et des erreurs apparaissent dans les expressions avec la dernière version de FreeCAD 1.1.3.
-Pour l'instant elles ont un intérêt pour rapidement faire évoluer le modèle de base, lorsque les formules paramétriques évoluents. A terme l'intérêt est de pouvoir dessiner plusieurs caissons dans un même meuble plutôt que d'assembler plusieurs meubles dans certains cas.
+Les commandes suivantes qui permettent de créer un caisson de base ne sont pas directement exploitables à ce stade. Les pièces dépendent les unes des autres et des erreurs apparaissent dans les expressions avec la dernière version de FreeCAD 1.1.3.
+Pour l'instant elles ont un intérêt pour rapidement faire évoluer le modèle de base, lorsque les formules paramétriques évoluent. A terme l'intérêt est de pouvoir dessiner plusieurs caissons dans un même meuble plutôt que d'assembler plusieurs meubles, dans certains cas.
 
 |                  Icon                  | Command         | Description                                    |
 | :------------------------------------: | :-------------- | :--------------------------------------------- |
@@ -165,7 +166,6 @@ Aucun contrôle n'est fait sur les objets sélectionnés, cela peut produire des
 |               | Plt_retrait_avant                          | App::PropertyDistance | -(Facades_jeu_en_profondeur + Hors_tout_epaisseur) * Plt_ext_avant_hors_tout                                                                                     |                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Tablettes     | Tablettes_jeu_lateral                      | App::PropertyLength   | 1.0 mm                                                                                                                                                           | Jeu des étagères avec les crémaillères ou panneaux (côtés et fond)                                                                                                                                                                                                                                                                                                                               |
 
-
 ## Méthode manuelle
 **Si une macro ne fonctionne pas ou plus**
 
@@ -174,7 +174,7 @@ Une contrainte de base du modèle générique du meuble que j'ai voulu est de ne
 Pour ce faire il faut avoir tous les composants de base dans un ou plusieurs fichiers pour pouvoir les dupliquer dans le meuble en cours de conception. Avec des expressions dans les propriétés des objets la duplication n'est pas évidente, par défaut FreeCAD ajoute les dépendances, et le modèle devient ingérable car le VarSet des paramètres est dupliqué également.
 
 La méthode que j'ai utilisé avant les macros, c'est de déployer toute l'arborescence d'un conteneur Part, donc l'objet Origin du Part, du Body, de tout ce qu'il contient... Là le raccourci clavier Alt + `flèche vers le bas` aide bien. Ensuite il faut tout sélectionner, faire un copier, cliquer sur `Utiliser la sélection d'origine` et vous obtiendrez les objets dupliqués sans erreur.
-Enfin il faut modifier les paramètres des composants, par exemple pour un montant il faut cliquer sur les propriétés obj_dessus, obj_dessous pour sélectionner les traverses haute et basse sur lesquelles le montant est fixée.
+Enfin il faut modifier les paramètres des composants, par exemple pour un montant il faut cliquer sur les propriétés obj_dessus, obj_dessous pour sélectionner les traverses haute et basse sur lesquelles le montant est fixé.
 
 ## Intégration IA
 
