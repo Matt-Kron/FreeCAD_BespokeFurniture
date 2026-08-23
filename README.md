@@ -165,7 +165,103 @@ Aucun contrôle n'est fait sur les objets sélectionnés, cela peut produire des
 |               | Plt_presence                               | App::PropertyBool     | True                                                                                                                                                             | Prise en compte du plateau dans la hauteur du meuble, réduisant la hauteur du caisson.                                                                                                                                                                                                                                                                                                           |
 |               | Plt_retrait_avant                          | App::PropertyDistance | -(Facades_jeu_en_profondeur + Hors_tout_epaisseur) * Plt_ext_avant_hors_tout                                                                                     |                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Tablettes     | Tablettes_jeu_lateral                      | App::PropertyLength   | 1.0 mm                                                                                                                                                           | Jeu des étagères avec les crémaillères ou panneaux (côtés et fond)                                                                                                                                                                                                                                                                                                                               |
+### Groupe : Chassis
 
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Chassis_epaisseur | PropertyLength | 22.0 mm | Epaisseur du matériau utilisé pour le châssis |
+| Chassis_hauteur | PropertyLength | 80.0 mm | Distance entre le bas du caisson et le sol |
+| Chassis_marge_verrin | PropertyLength | 10.0 mm | La hauteur réelle du châssis doit permettre d'absorber les aléas du sol, ce paramètre indique la marge à utiliser. C'est la hauteur maxi d'une bosse du sol qui peut être absorbée sans que la hauteur du meuble augmente |
+| Chassis_retrait_montant_droit | PropertyLength | 40.0 mm | Paramètre qui positionne la plinthe fixée sur le châssis, ou marge à utiliser pour ne pas être géné par la plinthe d'un mur adjacent |
+| Chassis_retrait_montant_gauche | PropertyLength | 40.0 mm | Paramètre qui positionne la plinthe fixée sur le châssis, ou marge à utiliser pour ne pas être géné par la plinthe d'un mur adjacent |
+| Chassis_retrait_traverse_arriere | PropertyLength | 30.0 mm | En général c'est la marge pour ne pas buter sur la plinthe du mur contre lequel le meuble est placé |
+| Chassis_retrait_traverse_avant | PropertyLength | 40.0 mm | Si cette valeur vaut l'épaisseur de la plinthe, la plinthe est alignée avec le montant |
+### Groupe : Configuration
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Configuration_Fond | PropertyBool | True | Obsolète. A vérifier pour supprimer le paramètre |
+| Configuration_Montant_droit_dessus | PropertyBool | True |  |
+| Configuration_Montant_gauche_dessus | PropertyBool | True |  |
+| Configuration_Plinthe | PropertyBool | True | Prise en compte ou non du châssis et des plinthes pour la hauteur du caisson. Typique vrai pour un meuble posé au sol, faux pour un caisson suspendu. |
+| Configuration_Traverse_haute_droit_dessus | PropertyBool | True |  |
+| Configuration_Traverse_haute_gauche_dessus | PropertyBool | True |  |
+| Configuration_fileur_droit | PropertyBool | True | Prise en compte du fileur dans la largeur du caisson |
+| Configuration_fileur_gauche | PropertyBool | True | Prise en compte du fileur dans la largeur du caisson |
+| Configuration_fileur_haut | PropertyBool | False | Prise en compte du fileur dans la hauteur du caisson |
+### Groupe : Facades
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Facades_jeu_en_profondeur | PropertyLength | 1.5 mm | Distance entre une porte et le caisson. 1.5mm est la valeur nominale de charnières Blum par exemple |
+| Facades_jeu_hauteur | PropertyLength | 1.0 mm | Abitrairement la moitié du jeu réel. Car avec plusieurs façades l'une au-dessus de l'autre, le jeu obtenu est le double de cette valeur. |
+| Facades_jeu_largeur | PropertyLength | 1.0 mm | Même remarque que pour la hauteur |
+### Groupe : Fileurs
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Fileurs_hauteur_haut | PropertyLength | 30.0 mm | Distance entre le mur ou ce qui est autour du meuble et le caisson. |
+| Fileurs_largeur_droite | PropertyLength | 30.0 mm | idem hauteur |
+| Fileurs_largeur_gauche | PropertyLength | 30.0 mm | idem hauteur |
+| Fileurs_marge_decoupe | PropertyLength | 15.0 mm | Ajouté à la largeur ou hauteur du fileur pour avoir la taille réelle de la pièce de bois à découper |
+| Fileurs_retrait_en_profondeur | PropertyDistance | 0.0 mm | Pour pouvoir positionner les fileurs dans le plan des façades ou en retrait |
+### Groupe : Fond
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Fond_depassement_rainure | PropertyLength | 5.0 mm |  |
+| Fond_epaisseur | PropertyLength | 8.0 mm |  |
+| Fond_retrait | PropertyLength | 12.0 mm | Avec ces valeurs, le fond enlève (épaisseur+retrait) = 8+12 = 20mm de profondeur utile au meuble par rapport à la profondeur du caisson. |
+### Groupe : Hors_tout
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Hors_tout_epaisseur | PropertyLength | 19.0 mm | En l'état du projet c'est l'épaisseur de tous les panneaux du meuble |
+| Hors_tout_epaisseur_2 | PropertyLength | 38.0 mm | 2ème valeur exploitable par les composants en changeant leurs formules. Seuls les montants gauche et droit ont un paramètre qui permet de choisir entre les 2 épaisseurs des Paramètres.                                                                                                                                                                                           meuble et de la présence des fileurs |
+| Hors_tout_hauteur | PropertyLength | 2400.0 mm |  |
+| Hors_tout_hauteur_caisson | PropertyLength | Hors_tout_hauteur - (Configuration_Plinthe == True ? Chassis_hauteur : 0 mm) - (Configuration_fileur_haut == True ? Fileurs_hauteur_haut : 0 mm) | Déduite de la hauteur du meuble en fonction du châssis et du fileur haut |
+| Hors_tout_largeur | PropertyLength | 1000.0 mm |  |
+| Hors_tout_largeur_caisson | PropertyLength | Hors_tout_largeur - (Configuration_fileur_gauche == True ? Fileurs_largeur_gauche : 0 mm) - (Configuration_fileur_droit == True ? Fileurs_largeur_droite : 0 mm) | Déduite de la largeur du |
+| Hors_tout_profondeur | PropertyLength | 600.0 mm |  |
+### Groupe : Matrice
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Matrice_Colonne_1 | PropertyLength | Matrice_largeur_fraction_1 | Ces propriétés du groupe Matrice servent à positionner des montants ou tablettes à des fractions de la largeur ou hauteur du caisson. Soit pour avoir des volumes de tailles identiques, soit pour avoir des façades de tailles identiques.<br>Ces propriétés sont alors utilisées dans les expressions de Placement des composants.<br>L'outil "Ajout d'étagère" fait à peu près la même chose. |
+| Matrice_Colonne_2 | PropertyLength | 0.0 mm |  |
+| Matrice_Ligne_1 | PropertyLength | 300.0 mm |  |
+| Matrice_Ligne_2 | PropertyLength | 500.0 mm |  |
+| Matrice_colonne_1_complementaire | PropertyLength | Hors_tout_largeur - Matrice_Colonne_1 - 3 * Hors_tout_epaisseur |  |
+| Matrice_colonne_2_complementaire | PropertyLength | Hors_tout_largeur - Matrice_Colonne_1 - Matrice_Colonne_2 - 4 * Hors_tout_epaisseur |  |
+| Matrice_fraction_1 | PropertyInteger | 2 |  |
+| Matrice_fraction_2 | PropertyInteger | 3 |  |
+| Matrice_largeur_fraction_1 | PropertyLength | (Hors_tout_largeur_caisson - (Matrice_fraction_1 + 1) * Hors_tout_epaisseur) / Matrice_fraction_1 |  |
+| Matrice_largeur_fraction_2 | PropertyLength | (Hors_tout_largeur_caisson - (Matrice_fraction_2 + 1) * Hors_tout_epaisseur) / Matrice_fraction_2 |  |
+| offset_1 | PropertyLength | 50.0 mm | Variable utilisée pour mettre en retrait des composants internes au meuble. Cas typique: ajout de tiroirs intérieurs "en applique" ou derrière des charnières. |
+### Groupe : Plinthes
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Plinthes_hauteur | PropertyLength | Chassis_hauteur + Fileurs_marge_decoupe | Hauteur des pièces de bois à découper car intègre la marge de découpe du groupe Fileurs |
+### Groupe : Plateau
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Plt_epaisseur | PropertyLength | 26.0 mm |  |
+| Plt_ext_arriere_hors_tout | PropertyBool | True | Quand le plateau doit s'ajuster aux parois qui l'entoure (les murs), la marge de découpe du groupe Fileurs est utilisée pour avoir la taille de la pièce de bois avant découpe sur le chantier. |
+| Plt_ext_avant_hors_tout | PropertyBool | True | Si Vrai le plateau recouvre les façades |
+| Plt_ext_droite_hors_tout | PropertyBool | True | Idem hauteur |
+| Plt_ext_gauche_hors_tout | PropertyBool | True | Idem hauteur |
+| Plt_extension_arriere | PropertyLength | Plt_ext_arriere_hors_tout * Fileurs_marge_decoupe |  |
+| Plt_extension_droite | PropertyLength | Plt_ext_droite_hors_tout * (Fileurs_marge_decoupe + Configuration_fileur_droit * Fileurs_largeur_droite) |  |
+| Plt_extension_gauche | PropertyLength | Plt_ext_gauche_hors_tout * (Fileurs_marge_decoupe + Configuration_fileur_gauche * Fileurs_largeur_gauche) |  |
+| Plt_presence | PropertyBool | True | Prise en compte du plateau dans la hauteur du meuble, réduisant la hauteur du caisson. |
+| Plt_retrait_avant | PropertyDistance | -(Facades_jeu_en_profondeur + Hors_tout_epaisseur) * Plt_ext_avant_hors_tout |  |
+### Groupe : Tablettes
+
+| Propriété | Type | Valeur | Description |
+| --- | --- | --- | --- |
+| Tablettes_jeu_lateral | PropertyLength | 1.0 mm | Jeu des étagères avec les crémaillères ou panneaux (côtés et fond) |
 ## Méthode manuelle
 **Si une macro ne fonctionne pas ou plus**
 
