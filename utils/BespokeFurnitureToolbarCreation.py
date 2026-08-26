@@ -10,6 +10,7 @@ includes FreeCAD code
 import FreeCADGui as Gui
 import FreeCAD as App
 import os
+import time
 
 from PySide import QtGui
 from PySide.QtGui import QToolBar
@@ -33,10 +34,6 @@ def create_custom_command(
         filename, menu_text, tooltip_text, whats_this_text, status_tip_text, pixmap_text
     )
     toolbar.SetString(command_name, "FreeCAD")
-
-    # Force the toolbars to be recreated
-    wb = Gui.activeWorkbench()
-    wb.reloadActive()
 
 def create_new_custom_toolbar():
     """Create a new custom toolbar and returns its preference group."""
@@ -69,6 +66,7 @@ def create_new_custom_toolbar():
     custom_toolbar = App.ParamGet("User parameter:BaseApp/Workbench/Global/Toolbar").GetGroup(new_group_name)
     custom_toolbar.SetString("Name", custom_toolbar_name)
     custom_toolbar.SetBool("Active", True)
+
     return custom_toolbar
 
 def check_for_toolbar(toolbar_name: str) -> bool:
@@ -86,7 +84,7 @@ def get_toolbar_with_name(name: str):
             return group
     return None
 
-def delete_toolbar(toolbar_name: str):
+def delete_toolbar(toolbar_name: str, cmds: list[dict]):
 
     for com in cmds:
         macro_path = os.path.join(bespokefurnitureFolder, com["macroName"])
@@ -476,7 +474,7 @@ cmds.append({
 toolbar = get_toolbar_with_name(TOOLBAR_NAME)
 
 if toolbar:
-    delete_toolbar(TOOLBAR_NAME)
+    delete_toolbar(TOOLBAR_NAME, cmds)
     toolbar = get_toolbar_with_name(TOOLBAR_NAME)
 
 if not toolbar:
@@ -497,6 +495,16 @@ for cmd in cmds:
                               cmd["whats_this_text"],
                               cmd["status_tip_text"],
                               cmd["pixmap_text"])
+
+from PySide.QtCore import QTimer
+def forcer_affichage_barre():
+    wb = Gui.activeWorkbench()
+    if wb:
+        wb.reloadActive()
+        mw = Gui.getMainWindow()
+        tb = mw.findChild(QToolBar, TOOLBAR_NAME)
+        tb.setVisible(True)
+QTimer.singleShot(10, forcer_affichage_barre)
 
 
 # class RPCServerStart:
