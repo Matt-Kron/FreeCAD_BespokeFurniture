@@ -7,11 +7,16 @@ dftStruct = (
                 "Fond b",
                 "Fond",
             )
-sel_obj = Gui.Selection.getSelection()
 
-part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, "Caisson")
+def main():
+    sel_obj = Gui.Selection.getSelection()
 
-if sel_obj:
-    Gui.Selection.addSelection(part)
-    from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator
-    run_orchestrator()
+    part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, "Caisson")
+
+    if sel_obj:
+        Gui.Selection.addSelection(part)
+        from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator
+        run_orchestrator()
+
+if __name__ == "__main__":
+    main()

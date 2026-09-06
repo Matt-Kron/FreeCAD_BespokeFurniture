@@ -143,8 +143,10 @@ class PanneauDialog(QtWidgets.QDialog):
     def __init__(self):
         super(PanneauDialog, self).__init__(FreeCADGui.getMainWindow(), QtCore.Qt.Window)
         self.setWindowTitle("Gestionnaire Panneaux (Sécurisé)")
-        self.resize(1500, 1500)
-        self.config_filepath = os.path.join(FreeCAD.getUserMacroDir(), self.CONFIG_FILENAME)
+        self.resize(1500, 1000)
+        __dir__ = os.path.dirname(__file__)
+        print(__dir__)
+        self.config_filepath = os.path.join(__dir__, PanneauDialog.CONFIG_FILENAME)
         self.config_panneaux = []
         self.doc_panneaux = []
 
@@ -173,7 +175,7 @@ class PanneauDialog(QtWidgets.QDialog):
         # --- SECTION FICHIER ---
         cfg_widget = QtWidgets.QWidget()
         cfg_lyt = QtWidgets.QVBoxLayout(cfg_widget)
-        cfg_lyt.addWidget(QtWidgets.QLabel("<b>1. Base de données Fichier (panneaux_config.txt)</b>"))
+        cfg_lyt.addWidget(QtWidgets.QLabel(f"<b>1. Base de données Fichier ({PanneauDialog.CONFIG_FILENAME})</b>"))
         self.config_table = QtWidgets.QTableView()
         self.config_model = PanneauTableModel(self.config_panneaux)
         self.config_proxy = QtCore.QSortFilterProxyModel()
@@ -443,4 +445,6 @@ def showPanneauDialog():
     global _panneau_dialog_instance
     if _panneau_dialog_instance is None: _panneau_dialog_instance = PanneauDialog()
     _panneau_dialog_instance.show()
-showPanneauDialog()
+
+if __name__ == "__main__":
+    showPanneauDialog()

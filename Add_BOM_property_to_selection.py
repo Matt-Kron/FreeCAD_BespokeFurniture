@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # Add the following custom properties to selected objects
 
+import os
+import FreeCAD, FreeCADGui
+
 # Type, Name, Group, Description, Value
 USER_PROPERTIES = (
                     ("App::PropertyBool", "BOM_destination", "UserProp", "Property to filter objects for BOM", True),
@@ -354,54 +357,58 @@ class Panneaux:
         else:
             print(f"Couleurs, Aucun objet avec la propriété 'BOM_mat' correspondant à un panneau n'a été trouvé ou mis à jour.")
 
-Panx = Panneaux()
+def main():
+    Panx = Panneaux()
 
-doc_obj = Panx._get_doc_object()
-if doc_obj is None:
-    Panx._create_doc_object()
-    Panx._copy_selected_to_doc()
-    Panx.doc_panneaux.pop(0)
-    Panx._save_doc_data()
+    doc_obj = Panx._get_doc_object()
+    if doc_obj is None:
+        Panx._create_doc_object()
+        Panx._copy_selected_to_doc()
+        Panx.doc_panneaux.pop(0)
+        Panx._save_doc_data()
 
-WOOD_MATERIALS = []
-for panel in Panx.doc_panneaux:
-    WOOD_MATERIALS.append(panel.nom_aggr)
+    WOOD_MATERIALS = []
+    for panel in Panx.doc_panneaux:
+        WOOD_MATERIALS.append(panel.nom_aggr)
 
-objs = FreeCADGui.Selection.getSelection()
+    objs = FreeCADGui.Selection.getSelection()
 
-if len(objs)!=0:
-   print('nombre objets: ', len(objs))
-   for o in objs:
-      if hasattr(o,"Shape"): # and obj.Shape.Solids:
-#         print('object has shape')
-         for prop in USER_PROPERTIES:
-             prop_name = prop[PROP_HEADERS["name"]]
-             if hasattr(o, prop_name):
-                 if prop_name == "BOM_destination":
+    if len(objs)!=0:
+        print('nombre objets: ', len(objs))
+    for o in objs:
+        if hasattr(o,"Shape"): # and obj.Shape.Solids:
+    #         print('object has shape')
+            for prop in USER_PROPERTIES:
+                prop_name = prop[PROP_HEADERS["name"]]
+                if hasattr(o, prop_name):
+                    if prop_name == "BOM_destination":
+                        setattr(o, prop_name, prop[PROP_HEADERS["value"]])
+                else:
+                    o.addProperty(prop[PROP_HEADERS["type"]], prop_name, prop[PROP_HEADERS["group"]], prop[PROP_HEADERS["description"]])
                     setattr(o, prop_name, prop[PROP_HEADERS["value"]])
-             else:
-                 o.addProperty(prop[PROP_HEADERS["type"]], prop_name, prop[PROP_HEADERS["group"]], prop[PROP_HEADERS["description"]])
-                 setattr(o, prop_name, prop[PROP_HEADERS["value"]])
-                 if prop_name == "BOM_mat":
-                     o.BOM_mat = WOOD_MATERIALS
-                     o.BOM_mat = WOOD_MATERIALS[DEFAULT_MAT]
-                 elif prop_name == "Nest_Thickness":
-                     min_length = ["XLength", o.Shape.BoundBox.XLength]
-                     if o.Shape.BoundBox.YLength < min_length[1]: min_length = ["YLength", o.Shape.BoundBox.YLength]
-                     if o.Shape.BoundBox.ZLength < min_length[1]: min_length = ["ZLength", o.Shape.BoundBox.ZLength]
-                     o.Nest_Thickness = min_length[0]
-                 elif prop_name == "Nest_grain":
-                     if "porte" in o.Label.lower():
-                         max_length = "ZLength"
-                     elif "tiroir" in o.Label.lower():
-                         max_length = "XLength"
-                     else:
-                         max_length = "XLength" if o.Shape.BoundBox.XLength > o.Shape.BoundBox.ZLength else "ZLength"
-                     ThicknessToGrain = {
-                                        "XLength": "ZLength",
-                                        "YLength": max_length,
-                                        "ZLength": "XLength",
-                                        }
-                     o.Nest_grain = ThicknessToGrain[o.Nest_Thickness]
+                    if prop_name == "BOM_mat":
+                        o.BOM_mat = WOOD_MATERIALS
+                        o.BOM_mat = WOOD_MATERIALS[DEFAULT_MAT]
+                    elif prop_name == "Nest_Thickness":
+                        min_length = ["XLength", o.Shape.BoundBox.XLength]
+                        if o.Shape.BoundBox.YLength < min_length[1]: min_length = ["YLength", o.Shape.BoundBox.YLength]
+                        if o.Shape.BoundBox.ZLength < min_length[1]: min_length = ["ZLength", o.Shape.BoundBox.ZLength]
+                        o.Nest_Thickness = min_length[0]
+                    elif prop_name == "Nest_grain":
+                        if "porte" in o.Label.lower():
+                            max_length = "ZLength"
+                        elif "tiroir" in o.Label.lower():
+                            max_length = "XLength"
+                        else:
+                            max_length = "XLength" if o.Shape.BoundBox.XLength > o.Shape.BoundBox.ZLength else "ZLength"
+                        ThicknessToGrain = {
+                                            "XLength": "ZLength",
+                                            "YLength": max_length,
+                                            "ZLength": "XLength",
+                                            }
+                        o.Nest_grain = ThicknessToGrain[o.Nest_Thickness]
 
-Panx._apply_colors_to_objects()
+    Panx._apply_colors_to_objects()
+
+if __name__ == "__main__":
+    main()

@@ -487,7 +487,7 @@ class Nest:
 
                 try:
                     # Nécessite l'importation de App pour Material, mais FreeCAD le gère souvent
-                    rect_o.ViewObject.ShapeAppearance = (App.Material(DiffuseColor=(0.33,0.67,1.00),AmbientColor=(0.33,0.33,0.33),SpecularColor=(0.53,0.53,0.53),EmissiveColor=(0.00,0.00,0.00),Shininess=(0.90),Transparency=(0.00),))
+                    rect_o.ViewObject.ShapeAppearance = (FreeCAD.Material(DiffuseColor=(0.33,0.67,1.00),AmbientColor=(0.33,0.33,0.33),SpecularColor=(0.53,0.53,0.53),EmissiveColor=(0.00,0.00,0.00),Shininess=(0.90),Transparency=(0.00),))
                 except Exception:
                     pass
 
@@ -1015,4 +1015,6 @@ def Main():
     else:
         print("Nesting cancelled by user.")
 
-Main()
+
+if __name__ == "__main__":
+    Main()

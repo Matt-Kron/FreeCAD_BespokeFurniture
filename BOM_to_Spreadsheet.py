@@ -886,8 +886,11 @@ if __name__ == "__main__":
 
         App.Console.PrintMessage("✅ Toutes les instructions ont été traitées par le bridge.\n")
 
-if __name__ == "__main__":
+def main():
     d = BOMToSpreadsheet()
     d.load_from_varset() # Assurez-vous que le chargement est fait
     d.tree.expandAll()    # <--- Déplie tout l'arbre
     d.show()
+
+if __name__ == "__main__":
+    main()

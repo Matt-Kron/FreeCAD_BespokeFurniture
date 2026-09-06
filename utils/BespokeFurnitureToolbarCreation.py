@@ -133,6 +133,7 @@ cmds = []
 # menu text: Add bottom beam
 cmds.append({
     "macroName": "Ajouter_TvInf.py",
+    "command": "Add_TvInf",
     "menu_text": "Add bottom beam",
     "tooltip_text": "Add bottom beam",
     "whats_this_text": "Add bottom beam",
@@ -143,6 +144,7 @@ cmds.append({
 # menu text: Add top beam
 cmds.append({
     "macroName": "Ajouter_TvSup.py",
+    "command": "Add_TvSup",
     "menu_text": "Add top beam",
     "tooltip_text": "Add top beam",
     "whats_this_text": "Add top beam",
@@ -153,6 +155,7 @@ cmds.append({
 # menu text: Add left panel
 cmds.append({
     "macroName": "Ajouter_MtG.py",
+    "command": "Add_mtg",
     "menu_text": "Add left panel",
     "tooltip_text": "Add left panel",
     "whats_this_text": "Add left panel",
@@ -163,6 +166,7 @@ cmds.append({
 # menu text: Add right panel
 cmds.append({
     "macroName": "Ajouter_MtD.py",
+    "command": "Add_mtd",
     "menu_text": "Add right panel",
     "tooltip_text": "Add right panel",
     "whats_this_text": "Add right panel",
@@ -173,6 +177,7 @@ cmds.append({
 # menu text: Add vertical part
 cmds.append({
     "macroName": "Ajouter_Mti.py",
+    "command": "Add_mti",
     "menu_text": "Add vertical part",
     "tooltip_text": "Add vertical part",
     "whats_this_text": "Add vertical part",
@@ -183,6 +188,7 @@ cmds.append({
 # menu text: Add horizontal part
 cmds.append({
     "macroName": "Ajouter_Tab.py",
+    "command": "Add_tab",
     "menu_text": "Add horizontal part",
     "tooltip_text": "Add horizontal part",
     "whats_this_text": "Add horizontal part",
@@ -193,6 +199,7 @@ cmds.append({
 # menu text: Add back
 cmds.append({
     "macroName": "Ajouter_Fond.py",
+    "command": "main",
     "menu_text": "Add back",
     "tooltip_text": "Add back",
     "whats_this_text": "Add back",
@@ -203,6 +210,7 @@ cmds.append({
 # menu text: Add door
 cmds.append({
     "macroName": "Ajouter_porte.py",
+    "command": "main",
     "menu_text": "Add door",
     "tooltip_text": "Add door",
     "whats_this_text": "Add door",
@@ -213,6 +221,7 @@ cmds.append({
 # menu text: Add drawer front
 cmds.append({
     "macroName": "Ajouter_tiroir.py",
+    "command": "main",
     "menu_text": "Add drawer front",
     "tooltip_text": "Add drawer front",
     "whats_this_text": "Add drawer front",
@@ -223,6 +232,7 @@ cmds.append({
 # menu text: Add vertical part right slope
 cmds.append({
     "macroName": "Ajouter_Mti_pente.py",
+    "command": "Add_mti_pente",
     "menu_text": "Add vertical part right slope",
     "tooltip_text": "Add vertical part right slope",
     "whats_this_text": "Add vertical part right slope",
@@ -233,6 +243,7 @@ cmds.append({
 # menu text: Add vertical part left slope
 cmds.append({
     "macroName": "Ajouter_Mti_penteG.py",
+    "command": "Add_mti_penteG",
     "menu_text": "Add vertical part left slope",
     "tooltip_text": "Add vertical part left slope",
     "whats_this_text": "Add vertical part left slope",
@@ -243,6 +254,7 @@ cmds.append({
 # menu text: Add door left slope
 cmds.append({
     "macroName": "Ajouter_porte_pente_g.py",
+    "command": "main",
     "menu_text": "Add door left slope",
     "tooltip_text": "Add door left slope",
     "whats_this_text": "Add door left slope",
@@ -253,6 +265,7 @@ cmds.append({
 # menu text: Add back left slope
 cmds.append({
     "macroName": "Ajouter_fond_pente_g.py",
+    "command": "main",
     "menu_text": "Add back left slope",
     "tooltip_text": "Add back left slope",
     "whats_this_text": "Add back left slope",
@@ -263,6 +276,7 @@ cmds.append({
 # menu text: Add several tab as shelf
 cmds.append({
     "macroName": "Add_Several_Tab.py",
+    "command": "main",
     "menu_text": "Add several tab as shelf",
     "tooltip_text": "Add several tab as shelf",
     "whats_this_text": "Add several tab as shelf",
@@ -273,6 +287,7 @@ cmds.append({
 # menu text: remove objects
 cmds.append({
     "macroName": "cmd_remove_object.py",
+    "command": "gui_remove",
     "menu_text": "Remove selected objects",
     "tooltip_text": "Remove selected objects",
     "whats_this_text": "Remove selected objects",
@@ -286,6 +301,7 @@ cmds.append({"macroName": "separator"})
 # menu text: Horizontal between 2 vertical
 cmds.append({
     "macroName": "TabEntreDeuxMt.py",
+    "command": "run_assignment_macro",
     "menu_text": "Horizontal between 2 vertical",
     "tooltip_text": "Horizontal between 2 vertical",
     "whats_this_text": "Horizontal between 2 vertical",
@@ -296,6 +312,7 @@ cmds.append({
 # menu text: Vertical between 2 horizontal
 cmds.append({
     "macroName": "MtEntreDeuxTv.py",
+    "command": "run_assignment_macro",
     "menu_text": "Vertical between 2 horizontal",
     "tooltip_text": "Vertical between 2 horizontal",
     "whats_this_text": "Vertical between 2 horizontal",
@@ -306,6 +323,7 @@ cmds.append({
 # menu text: Set one between other
 cmds.append({
     "macroName": "PartBetween2Other.py",
+    "command": "run_orchestrator",
     "menu_text": "Set one between other",
     "tooltip_text": "Set one between other",
     "whats_this_text": "Set one between other",
@@ -316,6 +334,7 @@ cmds.append({
 # menu text: Set slope vertical part on H one
 cmds.append({
     "macroName": "MtPenteSurTvInf.py",
+    "command": "run_assignment_macro",
     "menu_text": "Set slope vertical part on H one",
     "tooltip_text": "Set slope vertical part on H one",
     "whats_this_text": "Set slope vertical part on H one",
@@ -326,6 +345,7 @@ cmds.append({
 # menu text: Cut the selected tab
 cmds.append({
     "macroName": "cutTab.py",
+    "command": "main",
     "menu_text": "Cut the selected tab",
     "tooltip_text": "Cut the selected tab",
     "whats_this_text": "Cut the selected tab",
@@ -339,6 +359,7 @@ cmds.append({"macroName": "separator"})
 # menu text: Add selection to BOM
 cmds.append({
     "macroName": "Add_BOM_property_to_selection.py",
+    "command": "main",
     "menu_text": "Add selection to BOM",
     "tooltip_text": "Add BOM custom properties to the selected objects",
     "whats_this_text": "Add BOM custom properties to the selected objects",
@@ -348,7 +369,8 @@ cmds.append({
 
 # menu text: BOM prop to spreadsheet
 cmds.append({
-    "macroName": "BOM_to_spreadsheet_when_BOM-property-True.py",
+    "macroName": "BOM_to_spreadsheet_when_BOMpropertyTrue.py",
+    "command": "main",
     "menu_text": "BOM prop to spreadsheet",
     "tooltip_text": "Copy BOM properties when BOM_destination is True in 'BOM' spreadsheet",
     "whats_this_text": "Copy BOM properties when BOM_destination is True in 'BOM' spreadsheet",
@@ -359,6 +381,7 @@ cmds.append({
 # menu text: BOM prop tools
 cmds.append({
     "macroName": "BOM_objects_managment.py",
+    "command": "run",
     "menu_text": "BOM prop tools",
     "tooltip_text": "Tools to manage objects with BOM properties",
     "whats_this_text": "Tools to manage objects with BOM properties",
@@ -369,6 +392,7 @@ cmds.append({
 # menu text: Panels management
 cmds.append({
     "macroName": "BdD_panneaux_multi.py",
+    "command": "showPanneauDialog",
     "menu_text": "Panels management",
     "tooltip_text": "Panels management",
     "whats_this_text": "Panels management",
@@ -379,6 +403,7 @@ cmds.append({
 # menu text: Document panel management
 cmds.append({
     "macroName": "ChoisirPanneau.py",
+    "command": "showAssignationPanneauxDialog",
     "menu_text": "Document panel management",
     "tooltip_text": "Document panel management",
     "whats_this_text": "Document panel management",
@@ -389,6 +414,7 @@ cmds.append({
 # menu text: Manufacturing step management
 cmds.append({
     "macroName": "Operations_fabrication.py",
+    "command": "run",
     "menu_text": "Manufacturing step management",
     "tooltip_text": "Manufacturing step management",
     "whats_this_text": "Manufacturing step management",
@@ -399,6 +425,7 @@ cmds.append({
 # menu text: Nesting
 cmds.append({
     "macroName": "Wood_panel_nesting.py",
+    "command": "Main",
     "menu_text": "Nesting",
     "tooltip_text": "Nesting",
     "whats_this_text": "Nesting",
@@ -409,6 +436,7 @@ cmds.append({
 # menu text: Copy to external spreadsheet
 cmds.append({
     "macroName": "BOM_to_Spreadsheet.py",
+    "command": "main",
     "menu_text": "Copy to external spreadsheet",
     "tooltip_text": "Copy to external spreadsheet",
     "whats_this_text": "Copy to external spreadsheet",
@@ -419,6 +447,7 @@ cmds.append({
 # menu text: Current panel choice used by the other tools (Add tab...)
 cmds.append({
     "macroName": "CurrentPanel.py",
+    "command": "run",
     "menu_text": "Current panel choice used by the other tools (Add tab...)",
     "tooltip_text": "Current panel choice used by the other tools (Add tab...)",
     "whats_this_text": "Current panel choice used by the other tools (Add tab...)",
@@ -429,11 +458,11 @@ cmds.append({
 # Add separator
 cmds.append({"macroName": "separator"})
 
-rpc_path = "rpc_server/"
+rpc_path = "rpc_server"
 
 # menu text: Start the RPC server
 cmds.append({
-    "macroName": f"{rpc_path}cmd_start_rpc_server.py",
+    "macroName": os.path.join(rpc_path, "cmd_start_rpc_server.py"),
     "menu_text": "Start the RPC server",
     "tooltip_text": "Start the RPC server",
     "whats_this_text": "Start the RPC server",
@@ -443,7 +472,7 @@ cmds.append({
 
 # menu text: Stop the RPC server
 cmds.append({
-    "macroName": f"{rpc_path}cmd_stop_rpc_server.py",
+    "macroName": os.path.join(rpc_path, "cmd_stop_rpc_server.py"),
     "menu_text": "Stop the RPC server",
     "tooltip_text": "Stop the RPC server",
     "whats_this_text": "Stop the RPC server",
@@ -453,7 +482,7 @@ cmds.append({
 
 # menu text: Restart the RPC server
 cmds.append({
-    "macroName": f"{rpc_path}cmd_restart_rpc_server.py",
+    "macroName": os.path.join(rpc_path, "cmd_restart_rpc_server.py"),
     "menu_text": "Restart the RPC server",
     "tooltip_text": "Restart the RPC server",
     "whats_this_text": "Restart the RPC server",
@@ -463,7 +492,8 @@ cmds.append({
 
 # menu text: génère la géométrie simplifiée du meuble
 cmds.append({
-    "macroName": f"{rpc_path}meuble_simplifie_geometrie.py",
+    "macroName": os.path.join(rpc_path, "meuble_simplifie_geometrie.py"),
+    "command": "run",
     "menu_text": "Geo meuble",
     "tooltip_text": "Geométrie simplifiée du meuble",
     "whats_this_text": "Geométrie simplifiée du meuble",
@@ -482,6 +512,7 @@ if not toolbar:
 
 for cmd in cmds:
     if cmd["macroName"] == "separator":
+        continue
         add_separator(TOOLBAR_NAME)
     else:
         macroPath = os.path.join(bespokefurnitureFolder, cmd["macroName"])
@@ -506,6 +537,19 @@ def forcer_affichage_barre():
         tb.setVisible(True)
 QTimer.singleShot(10, forcer_affichage_barre)
 
+
+def get_cmds():
+    "Remove the path of the icon to keep only the icon file name"
+    cmd_list = []
+    if cmds:
+        for cmd in cmds:
+            if cmd["macroName"] == "separator" or "_rpc_" in cmd["macroName"]:
+                continue
+            cmd["pixmap_text"] = os.path.basename(cmd["pixmap_text"])
+            cmd_list.append(cmd)
+        return cmd_list
+    else:
+        return None
 
 # class RPCServerStart:
 #     """Commande pour créer un nouveau meuble paramétrique."""
