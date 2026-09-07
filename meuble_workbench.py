@@ -8,7 +8,7 @@ from pathlib import Path
 
 translate = App.Qt.translate
 
-from FreeCAD_BespokeFurniture.utils.BespokeFurnitureToolbarCreation import get_cmds
+from utils.BespokeFurnitureToolbarCreation import get_cmds
 
 __dir__ = Path(__file__).parent
 iconPath = __dir__ / "Icons"
