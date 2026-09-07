@@ -15,7 +15,7 @@ Keep this file fast - it runs on every FreeCAD GUI startup.
 """
 
 # from .commands import CmdNouveauMeuble, CmdNouveauCaisson  #, ExampleCommand, WorkbenchManipulator
-from FreeCAD_BespokeFurniture.meuble_workbench import MeubleWorkbench
+from meuble_workbench import MeubleWorkbench
 
 # Example workbench
 MeubleWorkbench.Install()

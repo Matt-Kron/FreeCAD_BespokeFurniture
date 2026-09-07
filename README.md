@@ -240,6 +240,8 @@ La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils
 
 ## Installation
 
+### Atelier personnalisé (workbench)
+Faire un gti clone dans le répertoire des Modules
 Faire un git clone dans le répertoire de Macros FreeCAD.
 La macro [BespokeFurnitureToolbarCreation.py](./utils/BespokeFurnitureToolbarCreation.py) située dans `./utils/` permet de créer la barre d'outils des commandes. Pour pouvoir lancer cette macro depuis FreeCAD qui masque les sous-dossiers, et garder la synchronisation du script avec le dépôt github, il faut créer un lien symbolique dans le dossier macro qui pointe vers ce fichier. J'ai testé sur Ubuntu et Win11 (commande mklink en admin).
 Les modèles de base sont dans le dossier CAD.
