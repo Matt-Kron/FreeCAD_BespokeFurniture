@@ -1,6 +1,6 @@
 import os, ast
 import FreeCAD as App
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
+from lib_menuiserie import *
 
 cfg_file = ADD_OBJECT_PARAM_FILE
 macros_path = BF_MACROS_PATH
