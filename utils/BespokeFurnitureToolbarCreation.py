@@ -501,43 +501,6 @@ cmds.append({
     "pixmap_text": "meuble_simplifie_geometrie.svg"
 })
 
-toolbar = get_toolbar_with_name(TOOLBAR_NAME)
-
-if toolbar:
-    delete_toolbar(TOOLBAR_NAME, cmds)
-    toolbar = get_toolbar_with_name(TOOLBAR_NAME)
-
-if not toolbar:
-    toolbar = create_new_custom_toolbar()
-
-for cmd in cmds:
-    if cmd["macroName"] == "separator":
-        continue
-        add_separator(TOOLBAR_NAME)
-    else:
-        macroPath = os.path.join(bespokefurnitureFolder, cmd["macroName"])
-        # if the command exists, it is removed and recreated
-        cmdgui = Gui.Command.findCustomCommand(macroPath)
-        if cmdgui : Gui.Command.removeCustomCommand(cmdgui)
-        create_custom_command(toolbar,
-                              macroPath,
-                              cmd["menu_text"],
-                              cmd["tooltip_text"],
-                              cmd["whats_this_text"],
-                              cmd["status_tip_text"],
-                              cmd["pixmap_text"])
-
-from PySide.QtCore import QTimer
-def forcer_affichage_barre():
-    wb = Gui.activeWorkbench()
-    if wb:
-        wb.reloadActive()
-        mw = Gui.getMainWindow()
-        tb = mw.findChild(QToolBar, TOOLBAR_NAME)
-        tb.setVisible(True)
-QTimer.singleShot(10, forcer_affichage_barre)
-
-
 def get_cmds():
     "Remove the path of the icon to keep only the icon file name"
     cmd_list = []
@@ -550,6 +513,46 @@ def get_cmds():
         return cmd_list
     else:
         return None
+
+def main():
+    toolbar = get_toolbar_with_name(TOOLBAR_NAME)
+
+    if toolbar:
+        delete_toolbar(TOOLBAR_NAME, cmds)
+        toolbar = get_toolbar_with_name(TOOLBAR_NAME)
+
+    if not toolbar:
+        toolbar = create_new_custom_toolbar()
+
+    for cmd in cmds:
+        if cmd["macroName"] == "separator":
+            continue
+            add_separator(TOOLBAR_NAME)
+        else:
+            macroPath = os.path.join(bespokefurnitureFolder, cmd["macroName"])
+            # if the command exists, it is removed and recreated
+            cmdgui = Gui.Command.findCustomCommand(macroPath)
+            if cmdgui : Gui.Command.removeCustomCommand(cmdgui)
+            create_custom_command(toolbar,
+                                macroPath,
+                                cmd["menu_text"],
+                                cmd["tooltip_text"],
+                                cmd["whats_this_text"],
+                                cmd["status_tip_text"],
+                                cmd["pixmap_text"])
+
+    from PySide.QtCore import QTimer
+    def forcer_affichage_barre():
+        wb = Gui.activeWorkbench()
+        if wb:
+            wb.reloadActive()
+            mw = Gui.getMainWindow()
+            tb = mw.findChild(QToolBar, TOOLBAR_NAME)
+            tb.setVisible(True)
+    QTimer.singleShot(10, forcer_affichage_barre)
+
+if __name__ == "__main__":
+    main()
 
 # class RPCServerStart:
 #     """Commande pour créer un nouveau meuble paramétrique."""
