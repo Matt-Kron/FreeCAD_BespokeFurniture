@@ -543,12 +543,13 @@ def main():
 
     from PySide.QtCore import QTimer
     def forcer_affichage_barre():
-        wb = Gui.activeWorkbench()
-        if wb:
-            wb.reloadActive()
-            mw = Gui.getMainWindow()
-            tb = mw.findChild(QToolBar, TOOLBAR_NAME)
-            tb.setVisible(True)
+        if App.GuiUp:
+            wb = Gui.activeWorkbench()
+            if wb:
+                wb.reloadActive()
+                mw = Gui.getMainWindow()
+                tb = mw.findChild(QToolBar, TOOLBAR_NAME)
+                tb.setVisible(True)
     QTimer.singleShot(10, forcer_affichage_barre)
 
 if __name__ == "__main__":
