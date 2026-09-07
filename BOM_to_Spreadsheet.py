@@ -886,11 +886,15 @@ if __name__ == "__main__":
 
         App.Console.PrintMessage("✅ Toutes les instructions ont été traitées par le bridge.\n")
 
+global dial_BOMtoTable
+dial_BOMtoTable = None
 def main():
-    d = BOMToSpreadsheet()
-    d.load_from_varset() # Assurez-vous que le chargement est fait
-    d.tree.expandAll()    # <--- Déplie tout l'arbre
-    d.show()
+    global dial_BOMtoTable
+    if dial_BOMtoTable is None:
+        dial_BOMtoTable = BOMToSpreadsheet()
+    dial_BOMtoTable.load_from_varset() # Assurez-vous que le chargement est fait
+    dial_BOMtoTable.tree.expandAll()    # <--- Déplie tout l'arbre
+    dial_BOMtoTable.show()
 
 if __name__ == "__main__":
     main()

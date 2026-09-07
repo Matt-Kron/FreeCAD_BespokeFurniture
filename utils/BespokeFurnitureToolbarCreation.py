@@ -498,7 +498,7 @@ cmds.append({
     "tooltip_text": "Geométrie simplifiée du meuble",
     "whats_this_text": "Geométrie simplifiée du meuble",
     "status_tip_text": "",
-    "pixmap_text": ""
+    "pixmap_text": "meuble_simplifie_geometrie.svg"
 })
 
 toolbar = get_toolbar_with_name(TOOLBAR_NAME)
