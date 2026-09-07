@@ -1,5 +1,5 @@
 import FreeCAD
-from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
+from lib_menuiserie import get_parent_part
 
 TOOL_META = {
         "name": "get_document_tree",

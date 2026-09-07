@@ -12,7 +12,7 @@ import FreeCADGui, FreeCAD, Draft
 from PySide import QtCore, QtGui
 # from PySide.QtWidgets import QLineEdit
 sys.path.append(FreeCAD.getUserMacroDir())
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
+from lib_menuiserie import *
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

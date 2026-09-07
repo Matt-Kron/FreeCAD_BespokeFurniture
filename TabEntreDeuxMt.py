@@ -1,7 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets, QtCore, QtGui
-from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part, find_additive_box
+from lib_menuiserie import get_parent_part, find_additive_box
 
 # Nom du groupe de paramètres pour la persistance
 PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/TabEntreDeuxMt"

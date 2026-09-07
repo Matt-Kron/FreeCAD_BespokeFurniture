@@ -1,5 +1,5 @@
 import FreeCAD as App
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
+from lib_menuiserie import *
 
 """
     type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut 1 pour les montants et traverses du caisson,

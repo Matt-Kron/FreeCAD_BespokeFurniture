@@ -1,7 +1,7 @@
 import FreeCAD
 
 from FreeCAD_BespokeFurniture import add_object_lib
-from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator_by_labels
+from PartBetween2Other import run_orchestrator_by_labels
 from add_object_lib import addObjectPartBodyBox
 
 # Descripteur

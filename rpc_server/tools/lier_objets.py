@@ -1,5 +1,5 @@
 import FreeCAD
-from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator_by_labels
+from PartBetween2Other import run_orchestrator_by_labels
 
 # Descripteur
 TOOL_META = {

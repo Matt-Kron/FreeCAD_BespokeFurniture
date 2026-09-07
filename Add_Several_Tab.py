@@ -1,12 +1,12 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtGui, QtWidgets
-from FreeCAD_BespokeFurniture.Ajouter_Tab import Add_tab
-from FreeCAD_BespokeFurniture.Ajouter_Mti import Add_mti
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
-from FreeCAD_BespokeFurniture.Objects_classes import bspfObj
-from FreeCAD_BespokeFurniture.PartBetween2Other import classify_object
-from FreeCAD_BespokeFurniture.objectsChoice import ObjChoiceDialog
+from Ajouter_Tab import Add_tab
+from Ajouter_Mti import Add_mti
+from lib_menuiserie import *
+from Objects_classes import bspfObj
+from PartBetween2Other import classify_object
+from objectsChoice import ObjChoiceDialog
 
 import os
 

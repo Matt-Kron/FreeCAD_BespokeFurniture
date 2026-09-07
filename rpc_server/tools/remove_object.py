@@ -1,5 +1,5 @@
 import FreeCAD, FreeCADGui
-from FreeCAD_BespokeFurniture.lib_menuiserie import find_additive_box, get_parent_part, getObjTag, msgCsl, userMsg
+from lib_menuiserie import find_additive_box, get_parent_part, getObjTag, msgCsl, userMsg
 
 
 TOOL_META = {

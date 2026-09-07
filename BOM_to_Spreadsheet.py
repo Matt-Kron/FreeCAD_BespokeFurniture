@@ -2,7 +2,7 @@ import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtGui, QtCore, QtWidgets
 import json, os, sys, re, subprocess
-from FreeCAD_BespokeFurniture.lib_menuiserie import BF_MACROS_PATH
+from lib_menuiserie import BF_MACROS_PATH
 
 import platform
 

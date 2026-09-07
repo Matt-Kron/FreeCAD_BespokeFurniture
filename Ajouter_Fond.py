@@ -1,6 +1,6 @@
 import FreeCAD as App
 import FreeCADGui as Gui
-from FreeCAD_BespokeFurniture.add_object_lib import addObjectPartBodyBox
+from add_object_lib import addObjectPartBodyBox
 
 dftStruct = (
                 "Fond p",
@@ -15,7 +15,7 @@ def main():
 
     if sel_obj:
         Gui.Selection.addSelection(part)
-        from FreeCAD_BespokeFurniture.PartBetween2Other import run_orchestrator
+        from PartBetween2Other import run_orchestrator
         run_orchestrator()
 
 if __name__ == "__main__":

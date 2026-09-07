@@ -1,7 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets, QtCore, QtGui
-from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
+from lib_menuiserie import get_parent_part
 
 # Paramètres de persistance
 PARAM_GROUP = "User parameter:BaseApp/Preferences/Macros/MtEntreDeuxTv"

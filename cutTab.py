@@ -1,7 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
-from FreeCAD_BespokeFurniture.Objects_classes import *
+from lib_menuiserie import *
+from Objects_classes import *
 
 def main():
     tab = Gui.Selection.getSelection()[0]
@@ -23,9 +23,9 @@ def main():
         Gui.Selection.addSelection(obj.object.obj_gauche)
         Gui.Selection.addSelection(obj.object.obj_droit)
 
-    from FreeCAD_BespokeFurniture.Ajouter_Tab import Add_tab
-    from FreeCAD_BespokeFurniture.Ajouter_TvInf import Add_TvInf
-    from FreeCAD_BespokeFurniture.Ajouter_TvSup import Add_TvSup
+    from Ajouter_Tab import Add_tab
+    from Ajouter_TvInf import Add_TvInf
+    from Ajouter_TvSup import Add_TvSup
     if "Tablette" in obj.object.Label:
         p = Add_tab()
     if "Tv inf" in obj.object.Label:

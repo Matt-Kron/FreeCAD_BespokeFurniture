@@ -1,9 +1,9 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtWidgets
-import FreeCAD_BespokeFurniture.MtEntreDeuxTv as MacroVertical
-import FreeCAD_BespokeFurniture.TabEntreDeuxMt as MacroHorizontal
-from FreeCAD_BespokeFurniture.lib_menuiserie import get_parent_part
+import MtEntreDeuxTv as MacroVertical
+import TabEntreDeuxMt as MacroHorizontal
+from lib_menuiserie import get_parent_part
 
 # =============================================================================
 # LOGIQUE DE CLASSIFICATION ET DÉTECTION

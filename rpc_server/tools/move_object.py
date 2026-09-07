@@ -1,7 +1,7 @@
 import FreeCAD
 
 # from FreeCAD_BespokeFurniture import add_object_lib
-from FreeCAD_BespokeFurniture.lib_menuiserie import find_additive_box, get_parent_part, getObjTag, msgCsl
+from lib_menuiserie import find_additive_box, get_parent_part, getObjTag, msgCsl
 
 # Descripteur
 TOOL_META = {

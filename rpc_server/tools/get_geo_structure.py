@@ -1,6 +1,6 @@
 import FreeCAD
 
-from FreeCAD_BespokeFurniture.rpc_server.meuble_simplifie_geometrie import get_json_data_from_container, run as meuble_simplifie_geometrie_run
+from rpc_server.meuble_simplifie_geometrie import get_json_data_from_container, run as meuble_simplifie_geometrie_run
 
 TOOL_META = {
         "name": "get_geo_structure",

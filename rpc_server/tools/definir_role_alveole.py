@@ -1,6 +1,6 @@
 import FreeCAD
 
-from FreeCAD_BespokeFurniture.rpc_server.extract_segments_alveoles import set_alveole_role
+from rpc_server.extract_segments_alveoles import set_alveole_role
 
 # Descripteur
 TOOL_META = {

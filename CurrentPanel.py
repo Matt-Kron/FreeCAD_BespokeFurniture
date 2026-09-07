@@ -9,7 +9,7 @@ import os
 import FreeCAD as App
 import FreeCADGui as Gui
 from PySide import QtCore, QtGui
-from FreeCAD_BespokeFurniture.lib_menuiserie import *
+from lib_menuiserie import *
 
 
 __dir__ = os.path.dirname(__file__)
@@ -30,7 +30,7 @@ class CurrentPanel_dialog(QtCore.QObject):
         self.widget.buttonBox.rejected.connect(self.Cancel_clicked)
         self.PanelsUpdate()
 
-    
+
     def PanelsUpdate(self):
         fcDoc = App.ActiveDocument
         if hasattr(fcDoc, 'PanneauManager'):
@@ -38,13 +38,13 @@ class CurrentPanel_dialog(QtCore.QObject):
                 current_panel = getCurrentWoodPanel()[0].split(';')[0]
                 lines = fcDoc.PanneauManager.liste_panneaux
                 i = 0
-                for line in lines[1:]:  
+                for line in lines[1:]:
                     if line.strip():
                         parts = line.split(';')
                         if len(parts) >= 5:
                             nom_abrege = parts[0]
                             # msgCsl(f"PanelsUpdate nom_abrege {nom_abrege}")
-                            if nom_abrege == current_panel: 
+                            if nom_abrege == current_panel:
                                 # msgCsl(f"PanelsUpdate nom_abrege {nom_abrege} == current_panel {current_panel}, {i}")
                                 index = i
                             item_nom = QtGui.QStandardItem(nom_abrege)
@@ -55,7 +55,7 @@ class CurrentPanel_dialog(QtCore.QObject):
             else:
                 userMsg("No panels list found")
                 self.Cancel_clicked()
-                
+
         else:
             userMsg("No panels list found")
             self.Cancel_clicked()
@@ -63,19 +63,19 @@ class CurrentPanel_dialog(QtCore.QObject):
     def cleanUp(self):
         if hasattr(App, "CurrentPanel_Dialog"):
             delattr(App, "CurrentPanel_Dialog")
-        
+
     def Ok_clicked(self):
         index = self.widget.panels_listView.selectedIndexes()[0]
         App.ActiveDocument.PanneauManager.current_panel = index.row() + 1
-        
+
         self.Cancel_clicked()
-    
+
     def Cancel_clicked(self):
         self.cleanUp()
         self.widget.close()
 
 # ====================================================================
-# FONCTION PRINCIPALE DE LA MACRO 
+# FONCTION PRINCIPALE DE LA MACRO
 # ====================================================================
 def run():
     # Vérifier si une instance existe déjà
