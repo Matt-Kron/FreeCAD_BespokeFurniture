@@ -1,6 +1,6 @@
 import FreeCAD as App
 import FreeCADGui as Gui
-from FreeCAD_BespokeFurniture.add_object_lib import addObjectPartBodyBox
+from add_object_lib import addObjectPartBodyBox
 
 dftStruct = (
                 "Porte pente G p",
