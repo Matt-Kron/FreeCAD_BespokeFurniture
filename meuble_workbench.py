@@ -34,7 +34,8 @@ class _CommandMeuble():
 
     def Activated(self):
         if ".FCStd" in self.command:
-            Gui.doCommand(f"{self.command}")
+            Gui.doCommand(f"import {self.modul}")
+            Gui.doCommand(f"{self.modul}.{self.command}")
         else:
             App.ActiveDocument.openTransaction(self.name)
 
@@ -70,20 +71,12 @@ class CommandGroup():
         return {"MenuText": self.menu, "ToolTip": self.tooltip}
 
 def load_Furniture(name):
-    models_folder = __dir__ / "CAD"
-    filename = ""
-    if name == "Meuble rectangulaire":
-        filename = models_folder / "Modele_caisson_parts_FC1-1-0_v7.FCStd"
-    elif name == "Meuble pente gauche":
-        filename = models_folder / "Modele_caisson_pente-gauche_v2.FCStd"
-    elif name == "Meuble pente droite":
-        filename = models_folder / "Modele_caisson_pente-droite_v1-1_FC1.FCStd"
-    elif name == "Porte cadre":
-        filename = models_folder / "Porte_Cadre_modele.FCStd"
-    elif name == "Bloc tiroir":
-        filename = models_folder / "Modele_box_tiroir_v1.FCStd"
-    if filename:
-        App.openDocument(filename)
+    doc = App.newDocument()
+    doc.mergeProject(name)
+    App.setActiveDocument(doc.Name)
+    App.ActiveDocument=App.getDocument(doc.Name)
+    Gui.ActiveDocument=Gui.getDocument(doc.Name)
+    Gui.activeDocument().activeView().viewDefaultOrientation()
 
 class MeubleWorkbench(Gui.Workbench):
 
@@ -125,7 +118,8 @@ class MeubleWorkbench(Gui.Workbench):
                 menutext=text,
                 tooltip=f"Ouvre {text}",
                 icon=icone,
-                command=f"FreeCAD.openDocument('{chemin_propice}')"
+                command=f"load_Furniture('{chemin_propice}')",
+                modul='meuble_workbench'
             )
 
             Gui.addCommand(cmd_id, cmd_instance)

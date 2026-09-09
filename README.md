@@ -1,5 +1,5 @@
 # FreeCAD Bespoke Furniture
-
+<img src="resources/atelier_meuble.png" width="800">
 <img src="resources/Bureau3D.png" width="150"><img src="resources/bibliotheque.png" width="220"><img src="resources/cuisine.png" width="265"><img src="resources/placard_01.png" width="150"><img src="resources/sous-escalier.png" width="260"><img src="resources/Dressing_face_01.png" width="240"><img src="resources/Placard_vue_01.png" width="100"><img src="resources/SdB_portes-ouvertes_01.png" width="150"><img src="resources/coupe_placard_01.png" width="150"><img src="resources/VueOrtho01.png" width="300"><img src="resources/caisson_haut_vitre.png" width="150"><img src="resources/Dressing_vue_globale_01.png" width="150"><img src="resources/Gemini_Generated_Image.png" width="200"><img src="resources/sous-escalier_02.png" width="150">
 
 [Résumé](#résumé)
@@ -53,6 +53,16 @@ L'épaisseur des panneaux est une épine dans le pied depuis le début, car j'ai
 
 ## Commandes disponibles
 
+### Modèles 3D
+
+|                      Icon                      | Command                  | Description                                                                                                       |
+| :--------------------------------------------: | :----------------------- | :---------------------------------------------------------------------------------------------------------------- |
+|    <img src="Icons/caisson.svg" width="32">    | Meuble rectangulaire     | Ajoute un meuble de base à compléter dans un nouveau document                                                     |
+|    <img src="Icons/pente_g.svg" width="32">    | Meuble pente gauche      | Ajoute un meuble sous pente gauche à compléter dans un nouveau document                                           |
+|    <img src="Icons/pente_d.svg" width="32">    | Meuble pente droite      | Ajoute un meuble sous pente droite à compléter dans un nouveau document                                           |
+|  <img src="Icons/porte_cadre.svg" width="32">  | Panneau cadre simple     | Ajoute un panneau avec un cadre simple dans un nouveau document. Peut être lié à une façade (porte, tiroir, joue) |
+|  <img src="Icons/bloc_tiroir.svg" width="32">  | Bloc tiroir              | Ajoute un bloc tiroir sans façade dans un nouveau document                                                        |
+| <img src="Icons/panneau_cadre.svg" width="32"> | Panneau cadre et moulure | Ajoute un panneau avec moulure dans un nouveau document. Peut être lié à une façade (porte, tiroir, joue)         |
 ### Caisson
 Les commandes suivantes qui permettent de créer un caisson de base ne sont pas directement exploitables à ce stade. Les pièces dépendent les unes des autres et des erreurs apparaissent dans les expressions avec la dernière version de FreeCAD 1.1.3.
 Pour l'instant elles ont un intérêt pour rapidement faire évoluer le modèle de base, lorsque les formules paramétriques évoluent. A terme l'intérêt est de pouvoir dessiner plusieurs caissons dans un même meuble plutôt que d'assembler plusieurs meubles, dans certains cas.
@@ -241,7 +251,33 @@ La chaine LLM <-> FreeCAD est en place, et je peux jouer sur le choix des outils
 ## Installation
 
 ### Atelier personnalisé (workbench)
-Faire un gti clone dans le répertoire des Modules
-Faire un git clone dans le répertoire de Macros FreeCAD.
-La macro [BespokeFurnitureToolbarCreation.py](./utils/BespokeFurnitureToolbarCreation.py) située dans `./utils/` permet de créer la barre d'outils des commandes. Pour pouvoir lancer cette macro depuis FreeCAD qui masque les sous-dossiers, et garder la synchronisation du script avec le dépôt github, il faut créer un lien symbolique dans le dossier macro qui pointe vers ce fichier. J'ai testé sur Ubuntu et Win11 (commande mklink en admin).
-Les modèles de base sont dans le dossier CAD.
+Dans la console FreeCAD, taper `App.getUserAppDataDir()` pour obtenir le répertoire utilisateur. Dans ce dossier, créer le répertoire "Mod" s'il n'existe pas.
+Dans un terminal, aller dans le répertoire Mod, puis lancer la commande:
+```powershell
+  git clone https://github.com/Matt-Kron/FreeCAD_BespokeFurniture.git
+```
+
+### Mode macros, essentiellement pour du développement
+Pour éviter les problèmes de reload() à chaque modification du code, j'ai développé toutes les fonctionnalités comme de simples macros, réunies dans un sous-dossier du répertoire macro de l'utilisateur et j'ai créé une barre d'outils pour appeler ces macros.
+Dans FreeCAD, récupérer le répertoire des macros avec fc_macros=App.getUserMacroDir()  
+Dans un terminal en remplaçant fc_macros par le bon répertoire:  
+**Ubuntu (ou autre distri linux):**
+```bash
+cd fc_macros
+git clone https://github.com/Matt-Kron/FreeCAD_BespokeFurniture.git
+ln -s ./FreeCAD_BespokeFurniture/utils/BespokeFurnitureToolbarCreation.py BespokeFurnitureToolbarCreation.py
+```
+
+**Windows:**
+```powershell
+cd fc_macros
+git clone https://github.com/Matt-Kron/FreeCAD_BespokeFurniture.git
+```
+
+dans un terminal en mode administrateur pour créer le lien symbolique
+```powershell
+cd fc_macros
+mklink BespokeFurnitureToolbarCreation.py .\FreeCAD_BespokeFurniture\utils\BespokeFurnitureToolbarCreation.py
+```
+
+Puis dans FreeCAD, lancer la macro BespokeFurnitureToolbarCreation.py pour ajouter la barre d'outils
