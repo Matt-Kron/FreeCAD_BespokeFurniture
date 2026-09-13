@@ -1,6 +1,7 @@
 import FreeCAD
 import FreeCADGui
 from PySide import QtCore, QtGui, QtWidgets
+from lib_menuiserie import WOODPANELS_ListProperty, WOODPANELS_VarSet
 import sys
 
 # --- 1. Nouvelle Boîte de Dialogue de Sélection de Panneau ---
@@ -130,8 +131,8 @@ class PanneauListModel(QtCore.QAbstractListModel):
 
 class AssignationPanneauxDialog(QtWidgets.QDialog):
 
-    OBJECT_MANAGER_NAME = "Liste panneaux"
-    PROP_NAME = "liste_panneaux"
+    OBJECT_MANAGER_NAME = WOODPANELS_VarSet #"Liste panneaux"
+    PROP_NAME = WOODPANELS_ListProperty #"liste_panneaux"
 
     def __init__(self):
         super(AssignationPanneauxDialog, self).__init__(FreeCADGui.getMainWindow(), QtCore.Qt.Window)
@@ -151,10 +152,12 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
         if FreeCAD.ActiveDocument is None:
             return None
 
-        for obj in FreeCAD.ActiveDocument.Objects:
-            if obj.Label == self.OBJECT_MANAGER_NAME and hasattr(obj, self.PROP_NAME):
-                return obj
-        return None
+        obj = FreeCAD.ActiveDocument.getObject(self.OBJECT_MANAGER_NAME)
+        return obj
+        # for obj in FreeCAD.ActiveDocument.Objects:
+        #     if obj.Label == self.OBJECT_MANAGER_NAME and hasattr(obj, self.PROP_NAME):
+        #         return obj
+        # return None
 
     def _load_panneau_data(self):
         panneaux_list = []
@@ -302,12 +305,20 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
 
         for index in object_indexes:
             obj = self.object_model.get_object(index)
-            if hasattr(obj, "BOM_mat"):
-                try:
-                    setattr(obj, "BOM_mat", new_bom_mat)
-                    updated_count += 1
-                except Exception as e:
-                    FreeCAD.Console.PrintError(f"Échec de l'assignation de BOM_mat pour {obj.Name}: {e}\n")
+            objs = []
+            if hasattr(obj, "_Body"):
+                for o in obj._Body.OutList:
+                    objs.append(o)
+            else:
+                objs.append(obj)
+            for o in objs:
+                if hasattr( o, "BOM_mat"):
+                    try:
+                        setattr(o, "BOM_mat", new_bom_mat)
+                        updated_count += 1
+                        FreeCAD.Console.PrintMessage(f"{updated_count} objet {o.Label}\n")
+                    except Exception as e:
+                        FreeCAD.Console.PrintError(f"Échec de l'assignation de BOM_mat pour {o.Name}: {e}\n")
 
         # 4. Rafraîchir les vues
         if updated_count > 0:
@@ -401,6 +412,7 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
             return
 
         color_map = {}
+        thickness_map = {}
         string_list = getattr(doc_obj_manager, self.PROP_NAME)
         if string_list and string_list[0].startswith("nom_aggr;"): string_list = string_list[1:]
 
@@ -408,6 +420,7 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
             parts = line.split(";")
             if len(parts) >= 8:
                 nom_aggr = parts[0]
+                thickness_map[nom_aggr] = float(parts[4])
                 couleur_hex = parts[7].strip()
                 try:
                     qcolor = QtGui.QColor(couleur_hex)
@@ -430,6 +443,8 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
                 if hasattr(obj, "BOM_mat"):
                     material_name = getattr(obj, 'BOM_mat')
                     if material_name in color_map:
+                        if hasattr(obj, "thickness"):
+                            obj.thickness = thickness_map[material_name]
                         target_color = color_map[material_name]
                         target_object = obj._Body if hasattr(obj, "_Body") else obj
                         # target_object = obj
@@ -450,9 +465,10 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
             FreeCAD.Console.PrintWarning(f"Erreur de rafraîchissement de l'interface graphique: {e}\n")
 
         if colored_count > 0:
-             FreeCAD.Console.PrintMessage(f"Couleurs appliquées à {colored_count} objets.\n")
+            FreeCAD.ActiveDocument.recompute()
+            FreeCAD.Console.PrintMessage(f"Couleurs appliquées à {colored_count} objets.\n")
         else:
-             FreeCAD.Console.PrintMessage("Aucun objet n'a été coloré (vérifier BOM_mat).\n")
+            FreeCAD.Console.PrintMessage("Aucun objet n'a été coloré (vérifier BOM_mat).\n")
 
 
 # --- Exécution de la Macro ---

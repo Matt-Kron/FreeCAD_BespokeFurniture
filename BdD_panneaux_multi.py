@@ -3,6 +3,7 @@ import FreeCADGui
 from PySide import QtCore, QtGui, QtWidgets
 import os
 import difflib
+from lib_menuiserie import WOODPANELS_ListProperty
 
 # --- Fonction Utilitaire ---
 def find_closest_match(target_string, choices):
@@ -137,7 +138,7 @@ class ColorPickerDelegate(QtWidgets.QItemDelegate):
 # --- 4. Dialogue Principal ---
 class PanneauDialog(QtWidgets.QDialog):
     CONFIG_FILENAME = "panneaux_config.txt"
-    PROP_NAME = "liste_panneaux"
+    PROP_NAME = WOODPANELS_ListProperty #"liste_panneaux"
     OBJECT_NAME = "Liste panneaux"
 
     def __init__(self):
@@ -429,11 +430,14 @@ class PanneauDialog(QtWidgets.QDialog):
 
     def _apply_colors(self):
         cmap = {p.nom_aggr: (QtGui.QColor(p.couleur).red()/255.0, QtGui.QColor(p.couleur).green()/255.0, QtGui.QColor(p.couleur).blue()/255.0, 0.0) for p in self.doc_panneaux}
+        thickness_map = {p.nom_aggr: p.epaisseur for p in self.doc_panneaux}
         item = self.list_doc_source.currentItem()
         if not item: return
         doc = FreeCAD.getDocument(item.text())
         for o in doc.Objects:
             if hasattr(o, "BOM_mat") and getattr(o, "BOM_mat") in cmap:
+                if hasattr(o, "thickness"):
+                    o.thickness = thickness_map[getattr(o, "BOM_mat")]
                 # t = o.InList[0] if o.InList and o.InList[0].TypeId == 'PartDesign::Body' else o
                 t = o._Body if  hasattr(o, "_Body") else o
                 if hasattr(t, 'ViewObject'): t.ViewObject.ShapeColor = cmap[getattr(o, "BOM_mat")]

@@ -204,7 +204,8 @@ def add_BOM_Mat(obj):
     # if prop_name == "BOM_mat":
     panels_shortnames = getPanelsShortName()
     obj.BOM_mat = panels_shortnames
-    obj.BOM_mat = getCurrentWoodPanel()[1] - 1
+    current_panel = getCurrentWoodPanel()
+    obj.BOM_mat = current_panel[1] - 1 if current_panel else 0
 
 def get_BOM_mat_thickness(obj):
     if hasattr(obj, "BOM_mat"):
