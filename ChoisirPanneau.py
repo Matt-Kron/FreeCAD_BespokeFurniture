@@ -431,11 +431,12 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
                     material_name = getattr(obj, 'BOM_mat')
                     if material_name in color_map:
                         target_color = color_map[material_name]
-                        target_object = obj
-                        if obj.InList:
-                            parent = obj.InList[0]
-                            if parent.TypeId == 'PartDesign::Body':
-                                target_object = parent
+                        target_object = obj._Body if hasattr(obj, "_Body") else obj
+                        # target_object = obj
+                        # if obj.InList:
+                        #     parent = obj.InList[0]
+                        #     if parent.TypeId == 'PartDesign::Body':
+                        #         target_object = parent
 
                         if hasattr(target_object, 'ViewObject') and hasattr(target_object.ViewObject, 'ShapeColor'):
                             target_object.ViewObject.ShapeColor = target_color

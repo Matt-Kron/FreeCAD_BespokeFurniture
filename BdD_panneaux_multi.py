@@ -434,7 +434,8 @@ class PanneauDialog(QtWidgets.QDialog):
         doc = FreeCAD.getDocument(item.text())
         for o in doc.Objects:
             if hasattr(o, "BOM_mat") and getattr(o, "BOM_mat") in cmap:
-                t = o.InList[0] if o.InList and o.InList[0].TypeId == 'PartDesign::Body' else o
+                # t = o.InList[0] if o.InList and o.InList[0].TypeId == 'PartDesign::Body' else o
+                t = o._Body if  hasattr(o, "_Body") else o
                 if hasattr(t, 'ViewObject'): t.ViewObject.ShapeColor = cmap[getattr(o, "BOM_mat")]
         FreeCADGui.updateGui(); self._notify("Couleurs OK.")
 

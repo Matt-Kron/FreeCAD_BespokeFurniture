@@ -134,6 +134,9 @@ class MeubleWorkbench(Gui.Workbench):
         commands.append(grp_name)
         for cmd in cmds:
             # nom_sans_extension, extension = os.path.splitext(cmd["macroName"])
+            if cmd["macroName"] == "separator":
+                commands.append("Separator")
+                continue
             nom_sans_extension = Path(cmd["macroName"]).stem
             print(nom_sans_extension)
             if nom_sans_extension == "meuble_simplifie_geometrie":

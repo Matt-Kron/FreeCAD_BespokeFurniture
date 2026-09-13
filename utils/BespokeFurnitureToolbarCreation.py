@@ -506,7 +506,10 @@ def get_cmds():
     cmd_list = []
     if cmds:
         for cmd in cmds:
-            if cmd["macroName"] == "separator" or "_rpc_" in cmd["macroName"]:
+            if "_rpc_" in cmd["macroName"]:
+                continue
+            if cmd["macroName"] == "separator":
+                cmd_list.append(cmd)
                 continue
             cmd["pixmap_text"] = os.path.basename(cmd["pixmap_text"])
             cmd_list.append(cmd)
