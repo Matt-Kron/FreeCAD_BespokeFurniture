@@ -145,6 +145,7 @@ class AssignationPanneauxDialog(QtWidgets.QDialog):
         self._setup_ui()
         self._load_data()
         self._connect_signals()
+        self._refresh_data()
 
     # --- Méthodes de chargement de données (Inchg.) ---
 

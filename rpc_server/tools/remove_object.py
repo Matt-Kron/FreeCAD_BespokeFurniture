@@ -25,7 +25,7 @@ def run(object_label: str) -> dict:
     box = find_additive_box(obj_parent)
     obj_tag = getObjTag(box)
     label = obj_parent.Label
-    if not "O" in obj_tag["type"]:
+    if not obj_tag or not "O" in obj_tag["type"]:
         userMsg(f"L'objet {label} ne peut pas être supprimé, ce n'est pas un composant du meuble")
         return  {
                "status": "failed",
