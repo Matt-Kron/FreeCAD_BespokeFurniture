@@ -129,7 +129,7 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
             label = objStruct[3]
             follow = True
         elif len(objStruct) > 4:
-            if objStruct[4] in ("Porte pente G param",):
+            if objStruct[4] in ("Porte pente G param","Porte pente D param"):
                 label = objStruct[4]
                 follow = True
 
@@ -199,6 +199,16 @@ def addObjectPartBodyBox(objStruct = dftStruct, myDoc = App.ActiveDocument, pare
         # shapeC.AttachmentSupport.setExpression = "list(tuple(myDoc.getObject(shape).Name._self; tuple(<<Vertex3>>; <<Edge3>>)))"
         shapeC.setExpression("AttachmentSupport", f"list(tuple({shape.Name}._self; tuple(<<Vertex3>>; <<Edge3>>)))")
         shapeC.MapMode = 'NormalToEdge'
+        updateValueExpression(name, shapeC, elements_Obj, myDoc)
+
+    if objBaseName in ("Porte_pente_D", "Fond_pente_D"):
+        name = objName(objStruct[3]) # "Mt_i_bxr"
+        shapeC = myDoc.addObject('PartDesign::SubtractiveBox',name)
+        shapeC.Label = objStruct[3]
+        body.addObject(shapeC)
+        # shapeC.AttachmentSupport.setExpression = "list(tuple(myDoc.getObject(shape).Name._self; tuple(<<Vertex3>>; <<Edge3>>)))"
+        shapeC.setExpression("AttachmentSupport", f"list(tuple({shape.Name}._self; tuple(<<Vertex1>>; <<Edge10>>; <<Edge2>>)))")
+        shapeC.MapMode = 'OXY'
         updateValueExpression(name, shapeC, elements_Obj, myDoc)
 
     name = objName(objStruct[0]) # "Mt_i_p"

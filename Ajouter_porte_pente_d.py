@@ -1,0 +1,22 @@
+import FreeCAD as App
+import FreeCADGui as Gui
+from add_object_lib import addObjectPartBodyBox
+
+dftStruct = (
+                "Porte pente D p",
+                "Porte pente D b",
+                "Porte pente D",
+                "Porte pente D coupee",
+                "Porte pente D param",
+            )
+
+def main():
+    sel_obj = Gui.Selection.getSelection()
+    part = addObjectPartBodyBox(dftStruct, App.ActiveDocument,"Caisson")
+    if sel_obj:
+        Gui.Selection.addSelection(part)
+        from PartBetween2Other import run_orchestrator
+        run_orchestrator()
+
+if __name__ == "__main__":
+    main()

@@ -262,6 +262,17 @@ cmds.append({
     "pixmap_text": os.path.join(iconFolder, "PortePenteG.svg")
 })
 
+# menu text: Add door right slope
+cmds.append({
+    "macroName": "Ajouter_porte_pente_d.py",
+    "command": "main",
+    "menu_text": "Add door right slope",
+    "tooltip_text": "Add door right slope",
+    "whats_this_text": "Add door right slope",
+    "status_tip_text": "",
+    "pixmap_text": os.path.join(iconFolder, "PortePenteD.svg")
+})
+
 # menu text: Add back left slope
 cmds.append({
     "macroName": "Ajouter_fond_pente_g.py",
@@ -271,6 +282,17 @@ cmds.append({
     "whats_this_text": "Add back left slope",
     "status_tip_text": "",
     "pixmap_text": os.path.join(iconFolder, "AddBackLeftSlope.svg")
+})
+
+# menu text: Add back right slope
+cmds.append({
+    "macroName": "Ajouter_fond_pente_d.py",
+    "command": "main",
+    "menu_text": "Add back right slope",
+    "tooltip_text": "Add back right slope",
+    "whats_this_text": "Add back right slope",
+    "status_tip_text": "",
+    "pixmap_text": os.path.join(iconFolder, "AddBackRightSlope.svg")
 })
 
 # menu text: Add several tab as shelf
