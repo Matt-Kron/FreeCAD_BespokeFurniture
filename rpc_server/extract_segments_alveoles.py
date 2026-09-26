@@ -3,7 +3,7 @@ import sys
 import FreeCAD as App
 from collections import defaultdict
 
-from ..lib_menuiserie import get_parent_part
+from lib_menuiserie import get_parent_part
 
 # Variable globale pour stocker le conteneur
 JSON_CONTAINER_NAME = "meuble_simplifie"
