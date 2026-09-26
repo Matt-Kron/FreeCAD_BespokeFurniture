@@ -224,13 +224,12 @@ class ShelfDialog(QtWidgets.QDialog):
         self.sliders = self.sliders[:num_shelves]
         self.slider_labels = self.slider_labels[:num_shelves]
         self.h_inputs = self.h_inputs[:num_shelves]
-        max_height = self.min_height if self.ui.absolutePosition.isChecked() else 100
         self.groupTypeChange()
 
         for i in range(previous_sliders_number, num_shelves):
             label = QtWidgets.QLabel(f"Étagère {i+1}:")
             slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
-            slider.sliderMoved.connect(lambda state, x=i : self.sliderChanged(x))
+            slider.valueChanged.connect(lambda state, x=i : self.sliderChanged(x))
             h_input = QtWidgets.QDoubleSpinBox()
             h_input.valueChanged.connect(lambda state, x=i : self.h_inputChanged(x))
             self.sliders_layout.addWidget(label)
@@ -244,6 +243,9 @@ class ShelfDialog(QtWidgets.QDialog):
             # if self.objects and i < len(self.objects):
             self.objects[i].part.Visibility = True
             # self.objects[i].temp = False
+
+        max_height = self.min_height - self.objects[num_shelves-1].thickness if self.ui.absolutePosition.isChecked() else 100
+
         for i in range(num_shelves):
             msgCsl(f"update_sliders max_height = {max_height}, absolute = {self.ui.absolutePosition.isChecked()}")
             position = self.getPosition(i, "update_sliders")
@@ -376,8 +378,8 @@ class ShelfDialog(QtWidgets.QDialog):
                 #                                                             f"+ {self.h_inputs[index].value()/100} * <<{find_additive_box(self.heightObjRef).Label}>>.Height")
                 self.objects[index].part.setExpression(self.placementProp,
                                                        f"<<{self.heightObjRef.Label}>>{self.placementProp} "
-                                                       f"+ {position / 100} * <<{find_additive_box(self.heightObjRef).Label}>>"
-                                                       f".{'Height' if self.mode[0] == 'V' else 'Length'}")
+                                                       f"+ {position / 100} * (<<{find_additive_box(self.heightObjRef).Label}>>"
+                                                       f".{'Height' if self.mode[0] == 'V' else 'Length'} - <<{self.objects[index]._object.Label}>>.{'Height' if self.mode[0] == 'V' else 'Length'})")
             # msgCsl(f"{__name__} position étagère {index} à {self.h_inputs[index].value() * (self.min_height/100 if self.ui.relativePosition.isChecked() else 1)}")
             msgCsl(f"{__name__} position étagère {index} à {position * (self.min_height/100 if self.ui.relativePosition.isChecked() else 1)}")
             self.objects[index].part.Document.recompute()
@@ -387,6 +389,7 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def h_inputChanged(self, index):
         self.sliders[index].setValue(round(self.h_inputs[index].value()))
+        self.updateObjPosition(index)
 
     def backPropToggled(self):
         self.backProp = self.ui.checkBox_BackProp.isChecked()
