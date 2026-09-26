@@ -232,6 +232,7 @@ class ShelfDialog(QtWidgets.QDialog):
             slider = QtWidgets.QSlider(QtCore.Qt.Vertical)
             slider.sliderMoved.connect(lambda state, x=i : self.sliderChanged(x))
             h_input = QtWidgets.QDoubleSpinBox()
+            h_input.valueChanged.connect(lambda state, x=i : self.h_inputChanged(x))
             self.sliders_layout.addWidget(label)
             self.sliders_layout.addWidget(h_input)
             self.sliders_layout.addWidget(slider)
@@ -249,6 +250,7 @@ class ShelfDialog(QtWidgets.QDialog):
             self.sliders[i].setRange(0, round(max_height))
             self.sliders[i].setEnabled(self.distribution_arbitrary.isChecked())
             self.h_inputs[i].setRange(0, max_height)
+            self.h_inputs[i].setEnabled(self.distribution_arbitrary.isChecked())
             self.sliders[i].setValue(round(position))
             msgCsl(f"self.sliders[i].setValue(int(position)) {self.sliders[i].value()}")
             if self.distribution_equidistant_no_thickness.isChecked():
@@ -364,6 +366,7 @@ class ShelfDialog(QtWidgets.QDialog):
                 # self.objects[0]._object.Document.recompute()
         if isinstance(index, int):
             position = self.getPosition(index, "updateObjPosition")
+            self.h_inputs[index].setValue(self.sliders[index].value())
             if self.ui.absolutePosition.isChecked():
                 self.objects[index].part.setExpression(self.placementProp, None)
                 setattr(self.objects[index].part.Placement.Base, self.placementProp[-1],
@@ -381,6 +384,9 @@ class ShelfDialog(QtWidgets.QDialog):
 
     def sliderChanged(self, index):
         self.updateObjPosition(index)
+
+    def h_inputChanged(self, index):
+        self.sliders[index].setValue(round(self.h_inputs[index].value()))
 
     def backPropToggled(self):
         self.backProp = self.ui.checkBox_BackProp.isChecked()
