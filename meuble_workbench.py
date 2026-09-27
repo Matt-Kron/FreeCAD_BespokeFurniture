@@ -71,7 +71,8 @@ class CommandGroup():
         return {"MenuText": self.menu, "ToolTip": self.tooltip}
 
 def load_Furniture(name):
-    doc = App.newDocument()
+    doc = App.ActiveDocument
+    if not doc : doc = App.newDocument()
     doc.mergeProject(name)
     App.setActiveDocument(doc.Name)
     App.ActiveDocument=App.getDocument(doc.Name)

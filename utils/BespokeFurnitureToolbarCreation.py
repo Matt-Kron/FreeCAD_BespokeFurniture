@@ -520,7 +520,7 @@ cmds.append({
     "tooltip_text": "Geométrie simplifiée du meuble",
     "whats_this_text": "Geométrie simplifiée du meuble",
     "status_tip_text": "",
-    "pixmap_text": "meuble_simplifie_geometrie.svg"
+    "pixmap_text": os.path.join(iconFolder, "meuble_simplifie_geometrie.svg")
 })
 
 def get_cmds():
