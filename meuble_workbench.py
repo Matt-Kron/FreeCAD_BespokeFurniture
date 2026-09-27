@@ -78,6 +78,9 @@ def load_Furniture(name):
     App.ActiveDocument=App.getDocument(doc.Name)
     Gui.ActiveDocument=Gui.getDocument(doc.Name)
     Gui.activeDocument().activeView().viewDefaultOrientation()
+    for obj in doc.Objects:
+        if "PanneauManager" in obj.Name and obj.Name != "PanneauManager":
+            doc.removeObject(obj.Name)
 
 class MeubleWorkbench(Gui.Workbench):
 

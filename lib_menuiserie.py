@@ -93,6 +93,28 @@ def get_parent_part(obj):
 
     return None
 
+def get_parent_caisson(obj):
+    current = obj
+    if current and current.TypeId == "App::Part":
+        tag_prop = getObjTag(current)
+        if tag_prop and tag_prop["type"] == "OV0" and tag_prop["caisson"] == "CSP":
+            return current
+    while current:
+        # 1. Tenter d'accéder directement au parent structurel (si disponible)
+        if hasattr(current, "getParentGeoFeatureGroup") and current.getParentGeoFeatureGroup():
+            current = current.getParentGeoFeatureGroup()
+            if current and current.TypeId == "App::Part":
+                tag_prop = getObjTag(current)
+                if tag_prop and tag_prop["type"] == "OV0" and tag_prop["caisson"] == "CSP":
+                    return current
+
+    return None
+
+def get_caisson_from_selection(sel_obj):
+    if sel_obj:
+        return get_parent_caisson(sel_obj[0])
+    return None
+
 def find_additive_box(parent_obj):
     """
     Cherche un objet de type PartDesign::AdditiveBox dans l'arborescence de parent_obj.
@@ -238,12 +260,15 @@ def getLastEtgGrpIndex():
 def setObjTag(obj, typ = None, caisson = None, groupe_etageres = None):
     """
         type: OHx, OVx  O pour Objet, H-V selon l'orientation horizontale ou verticale. L'indice vaut:
+            0 pour le meuble (bspf_tag = OV0;MBL)
+            0 pour le caisson (bspf_tag = OV0;CSP)
             1 pour les montants et traverses du caisson,
             2 pour les éléments internes au caisson, montant et tablettes
             3 pour les façades comme les porte, tiroir, fileurs selon le plan X-Z
             4 pour le fond
         caisson: permet d'identifier un sous-ensemble formé de 2 montants et 2 traverses. CSP pour le caisson principal du meuble formé
                 des montants gauche et droit, et des traverses inf et sup. CSi pour les autres.
+                MBL pour l'objet Part qui contient le caisson
         groupe_etageres: AAA+B+X permet d'identifier les éléments formant un groupe d'étagères ou de montants qui scindent un caisson.
                 AAA=ETG pour des tablettes
                 AAA=MTI pour des montants

@@ -334,6 +334,7 @@ class ShelfDialog(QtWidgets.QDialog):
             Gui.Selection.addSelection(self.objB)
             Gui.Selection.addSelection(self.objT)
         obj = bspfObj()
+        print(f"addShelf {len(Gui.Selection.getSelection())}")
         part = Add_tab() if self.mode[0] == "V" else Add_mti()
         obj.object = find_additive_box(part)
         if not self.group_index: self.group_index = getMaxShelvesIndex() + 1

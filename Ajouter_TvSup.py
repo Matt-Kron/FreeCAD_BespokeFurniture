@@ -1,6 +1,7 @@
 import FreeCAD as App
 import FreeCADGui as Gui
 from add_object_lib import addObjectPartBodyBox
+from lib_menuiserie import get_caisson_from_selection
 
 def Add_TvSup():
     dftStruct = (
@@ -10,9 +11,10 @@ def Add_TvSup():
                     "Tv sup rainuree",
                 )
 
-    # sel_obj = Gui.Selection.getSelection()
-
-    part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, "Caisson")
+    sel_obj = Gui.Selection.getSelection()
+    caisson = get_caisson_from_selection(sel_obj)
+    conteneur = caisson.Label if caisson else "Caisson"
+    part = addObjectPartBodyBox(dftStruct, App.ActiveDocument, conteneur)
 
     # if sel_obj:
     #     Gui.Selection.addSelection(part)
